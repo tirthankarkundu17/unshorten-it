@@ -143,6 +143,11 @@ function App() {
 
       <footer className="footer animate-slide-up" style={{ animationDelay: '0.2s' }}>
         <p>Built with FastApi & React. Transparent & Fast.</p>
+        <p style={{ marginTop: '0.5rem' }}>
+          Made with love by <a href="http://github.com/tirthankarkundu17/" target="_blank" rel="noopener noreferrer" className="author-link">Tirthankar Kundu</a>
+          {' '}&bull;{' '}
+          <a href="https://bitmaskers.in" target="_blank" rel="noopener noreferrer" className="author-link">bitmaskers.in</a>
+        </p>
       </footer>
     </div>
   );

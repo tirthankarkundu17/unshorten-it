@@ -13,7 +13,8 @@ run-frontend:
 	cd frontend && npm run dev
 
 # Alias for run (backend)
-dev: run
+run: run-backend run-frontend
+	echo "Backend and Frontend are running"
 
 
 # Install or sync dependencies using uv

@@ -234,6 +234,18 @@
   font-size: 0.875rem;
 }
 
+.author-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.author-link:hover {
+  color: var(--accent-hover);
+  text-shadow: 0 0 8px var(--accent-glow);
+}
+
 @media (max-width: 640px) {
   .search-form {
     flex-direction: column;
