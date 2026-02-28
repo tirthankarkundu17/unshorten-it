@@ -22,10 +22,6 @@ async def unshorten_url(url: str) -> Dict[str, Any]:
     except httpx.RequestError as exc:
         end_time = time.perf_counter()
         return {
-            "original_url": url,
-            "final_url": "",
-            "redirect_chain": redirect_chain,
-            "response_time_ms": round((end_time - start_time) * 1000, 2),
             "error": f"Request failed: {str(exc)}"
         }
 
@@ -35,6 +31,5 @@ async def unshorten_url(url: str) -> Dict[str, Any]:
         "original_url": url,
         "final_url": final_url,
         "redirect_chain": redirect_chain,
-        "response_time_ms": round((end_time - start_time) * 1000, 2),
-        "error": None
+        "response_time_ms": round((end_time - start_time) * 1000, 2)
     }

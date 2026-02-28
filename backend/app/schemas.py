@@ -1,5 +1,13 @@
 from pydantic import BaseModel, HttpUrl
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+    details: Optional[Any] = None
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
 
 class URLRequest(BaseModel):
     url: HttpUrl
@@ -9,4 +17,3 @@ class URLResponse(BaseModel):
     final_url: str
     redirect_chain: List[str]
     response_time_ms: float
-    error: Optional[str] = None
