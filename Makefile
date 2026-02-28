@@ -16,9 +16,9 @@ clean:
 	FOR /d /r . %d in (__pycache__) DO @IF EXIST "%d" rd /s /q "%d"
 
 # Build the Docker image
-docker-build:
+docker-build-backend:
 	cd backend && docker build -t unshorten-it-backend .
 
 # Run the Docker container
-docker-run:
+docker-run-backend:
 	docker run -p 8000:8000 --rm unshorten-it-backend
