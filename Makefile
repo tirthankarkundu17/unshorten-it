@@ -25,9 +25,9 @@ clean:
 	FOR /d /r . %d in (__pycache__) DO @IF EXIST "%d" rd /s /q "%d"
 
 # Docker Image tags for multi-architecture builds
-IMAGE_PREFIX ?= your_docker_username
-BACKEND_IMAGE ?= $(IMAGE_PREFIX)/unshortenit-backend:latest
-FRONTEND_IMAGE ?= $(IMAGE_PREFIX)/unshortenit-frontend:latest
+DOCKER_USER ?= your_docker_username
+BACKEND_IMAGE ?= $(DOCKER_USER)/unshortenit-backend:latest
+FRONTEND_IMAGE ?= $(DOCKER_USER)/unshortenit-frontend:latest
 
 # Build the Docker image locally
 docker-build-backend:

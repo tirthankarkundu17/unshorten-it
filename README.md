@@ -53,10 +53,10 @@ A `Makefile` is provided in the root directory for convenience.
 4. **Multi-Architecture Builds (Docker Hub)**:
    The project is pre-configured to build seamlessly for both `linux/amd64` and `linux/arm64` simultaneously via Buildx, and push directly to a remote registry.
 
-   To execute this, export your Docker prefix/username (default is `unshortenit`), log in to Docker, and run:
+   To execute this, export your Docker prefix/username (default is `your_docker_username`), log in to Docker, and run:
    ```sh
-   IMAGE_PREFIX=YOUR_DOCKER_USER make docker-build-push-backend
-   IMAGE_PREFIX=YOUR_DOCKER_USER make docker-build-push-frontend
+   DOCKER_USER=your_docker_username make docker-build-push-backend
+   DOCKER_USER=your_docker_username make docker-build-push-frontend
    ```
 
 ## API Documentation
