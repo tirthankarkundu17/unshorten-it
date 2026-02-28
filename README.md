@@ -50,6 +50,15 @@ A `Makefile` is provided in the root directory for convenience.
    ```
    *The UI will be exposed at `http://localhost:8080`.*
 
+4. **Multi-Architecture Builds (Docker Hub)**:
+   The project is pre-configured to build seamlessly for both `linux/amd64` and `linux/arm64` simultaneously via Buildx, and push directly to a remote registry.
+
+   To execute this, export your Docker prefix/username (default is `unshortenit`), log in to Docker, and run:
+   ```sh
+   IMAGE_PREFIX=YOUR_DOCKER_USER make docker-build-push-backend
+   IMAGE_PREFIX=YOUR_DOCKER_USER make docker-build-push-frontend
+   ```
+
 ## API Documentation
 
 Once the server is running, you can access the interactive API documentation (Swagger UI) directly at `http://localhost:8000/docs` or the ReDoc UI at `http://localhost:8000/redoc`.

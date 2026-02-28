@@ -24,18 +24,36 @@ install:
 clean:
 	FOR /d /r . %d in (__pycache__) DO @IF EXIST "%d" rd /s /q "%d"
 
-# Build the Docker image
+# Docker Image tags for multi-architecture builds
+IMAGE_PREFIX ?= your_docker_username
+BACKEND_IMAGE ?= $(IMAGE_PREFIX)/unshortenit-backend:latest
+FRONTEND_IMAGE ?= $(IMAGE_PREFIX)/unshortenit-frontend:latest
+
+# Build the Docker image locally
 docker-build-backend:
 	cd backend && docker build -t unshorten-it-backend .
 
-# Run the Docker container
+# Run the Docker container locally
 docker-run-backend:
 	docker run -p 8000:8000 --rm unshorten-it-backend
 
-# Build the Frontend Docker image
+# Build the Frontend Docker image locally
 docker-build-frontend:
 	cd frontend && docker build -t unshorten-it-frontend .
 
-# Run the Frontend Docker container
+# Run the Frontend Docker container locally
 docker-run-frontend:
 	docker run -p 8080:80 --rm unshorten-it-frontend
+
+# Set up docker buildx builder for multi-arch builds
+docker-setup-buildx:
+	docker buildx create --use --name unshorten-builder || docker buildx use unshorten-builder
+
+# Multi-arch build and push for backend
+docker-build-push-backend: docker-setup-buildx
+	cd backend && docker buildx build --platform linux/amd64,linux/arm64 -t $(BACKEND_IMAGE) --push .
+
+# Multi-arch build and push for frontend
+docker-build-push-frontend: docker-setup-buildx
+	cd frontend && docker buildx build --platform linux/amd64,linux/arm64 -t $(FRONTEND_IMAGE) --push .
+
