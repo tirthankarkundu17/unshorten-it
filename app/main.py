@@ -22,7 +22,7 @@ app.add_middleware(
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    return {"status": "healthy", "timestamp": time.time()}
+    return {"status": "ok", "timestamp": time.time()}
 
 @app.post("/api/v1/unshorten", response_model=URLResponse, tags=["URL Operations"])
 async def unshorten(request: URLRequest):
