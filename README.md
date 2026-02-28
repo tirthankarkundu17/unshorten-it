@@ -22,25 +22,33 @@ A `Makefile` is provided in the root directory for convenience.
 
 1. **Install dependencies**:
    ```sh
-   make install
+   make install          # Installs backend dependencies via uv
+   make install-frontend # Installs frontend dependencies via npm
    ```
-   *This uses `uv sync` inside the `backend/` directory.*
 
-2. **Run the development server**:
+2. **Run the development servers**:
+   Open two terminals and run:
    ```sh
-   make run
-   # or
-   make dev
+   make run-backend      # Starts the backend FastAPI server
+   make run-frontend     # Starts the Vite frontend on http://localhost:5173
    ```
-   *The server will start on `http://localhost:8000` with live-reloading enabled.*
 
 3. **Using Docker**:
-   To build and run the application via Docker:
+   To build and run the entire stack via Docker:
+
+   **Backend:**
    ```sh
-   make docker-build
-   make docker-run
+   make docker-build-backend
+   make docker-run-backend
    ```
-   *The server will be exposed at `http://localhost:8000` within the container.*
+   *The API will be exposed at `http://localhost:8000`.*
+
+   **Frontend:**
+   ```sh
+   make docker-build-frontend
+   make docker-run-frontend
+   ```
+   *The UI will be exposed at `http://localhost:8080`.*
 
 ## API Documentation
 

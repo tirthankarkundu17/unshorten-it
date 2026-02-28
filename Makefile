@@ -31,3 +31,11 @@ docker-build-backend:
 # Run the Docker container
 docker-run-backend:
 	docker run -p 8000:8000 --rm unshorten-it-backend
+
+# Build the Frontend Docker image
+docker-build-frontend:
+	cd frontend && docker build -t unshorten-it-frontend .
+
+# Run the Frontend Docker container
+docker-run-frontend:
+	docker run -p 8080:80 --rm unshorten-it-frontend
