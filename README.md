@@ -55,8 +55,8 @@ A `Makefile` is provided in the root directory for convenience.
 
    To execute this, export your Docker prefix/username (default is `your_docker_username`), log in to Docker, and run:
    ```sh
-   DOCKER_USER=your_docker_username make docker-build-push-backend
-   DOCKER_USER=your_docker_username make docker-build-push-frontend
+   make DOCKER_USER=your_docker_username docker-build-push-backend
+   make DOCKER_USER=your_docker_username docker-build-push-frontend
    ```
 
 ## API Documentation
