@@ -2,6 +2,8 @@
 
 **unshorten-it** is a simple and fast Python FastAPI application that takes a shortened URL as input and follows its redirect chain. It returns a JSON object containing the original URL, the final destination URL, all intermediate redirects, and the total response time.
 
+![Unshorten It Demo](docs/recording.gif)
+
 ## Features
 
 - **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/).
@@ -33,8 +35,20 @@ A `Makefile` is provided in the root directory for convenience.
    make run-frontend     # Starts the Vite frontend on http://localhost:5173
    ```
 
-3. **Using Docker**:
-   To build and run the entire stack via Docker:
+3. **Using Docker Compose (Recommended)**:
+   To build and run the entire stack simultaneously:
+   ```sh
+   make docker-up
+   ```
+   *The backend will be exposed at `http://localhost:8000` and the frontend at `http://localhost:8080`.*
+   
+   To shut down the entire stack:
+   ```sh
+   make docker-down
+   ```
+
+4. **Using Separate Docker Containers**:
+   To build and run the applications individually via Docker:
 
    **Backend:**
    ```sh
@@ -50,7 +64,7 @@ A `Makefile` is provided in the root directory for convenience.
    ```
    *The UI will be exposed at `http://localhost:8080`.*
 
-4. **Multi-Architecture Builds (Docker Hub)**:
+5. **Multi-Architecture Builds (Docker Hub)**:
    The project is pre-configured to build seamlessly for both `linux/amd64` and `linux/arm64` simultaneously via Buildx, and push directly to a remote registry.
 
    To execute this, export your Docker prefix/username (default is `your_docker_username`), log in to Docker, and run:
@@ -102,6 +116,7 @@ Returns the health status of the application.
 unshorten-it/
 ├── Makefile                # Aliases for setup and running the app
 ├── README.md               # Project documentation
+├── docker-compose.yml      # Orchestration for full-stack deployment
 ├── backend/                # FastAPI application
 │   ├── app/                # Application routes and services
 │   ├── pyproject.toml      # Dependency definitions

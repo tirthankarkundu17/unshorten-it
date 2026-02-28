@@ -58,3 +58,11 @@ docker-build-push-backend: docker-setup-buildx
 docker-build-push-frontend: docker-setup-buildx
 	cd frontend && docker buildx build --platform linux/amd64,linux/arm64 -t $(FRONTEND_IMAGE) --push .
 
+# Run the full stack using Docker Compose
+docker-up:
+	docker compose up --build -d
+
+# Stop and tear down the Docker Compose stack
+docker-down:
+	docker compose down
+
