@@ -24,6 +24,10 @@ RUN rm -rf /usr/share/nginx/html/*
 # Copy the built assets from the builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Run env injection script before nginx starts
+COPY env.sh /docker-entrypoint.d/99-env.sh
+RUN chmod +x /docker-entrypoint.d/99-env.sh
+
 # Expose port 80 for Nginx
 EXPOSE 80
 

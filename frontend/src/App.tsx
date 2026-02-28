@@ -36,7 +36,14 @@ function App() {
     setResult(null);
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+      // Prioritize runtime injected env var, fallback to Vite env var, then default.
+      let apiBaseUrl = (window as any)._env_?.API_BASE_URL || import.meta.env.API_BASE_URL;
+
+      // Clean up any stray string quotes that Docker might have injected
+      if (typeof apiBaseUrl === 'string') {
+        apiBaseUrl = apiBaseUrl.replace(/^["']|["']$/g, '');
+      }
+
       const response = await fetch(`${apiBaseUrl}/api/v1/unshorten`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
