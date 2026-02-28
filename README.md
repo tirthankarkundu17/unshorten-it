@@ -4,15 +4,16 @@
 
 ## Features
 
-- Unshortens URLs by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.).
-- Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/) for high-performance asynchronous execution.
-- Includes robust error handling and input validation.
-- Organized project structure adhering to modern Python best practices.
-- Managed by [`uv`](https://github.com/astral-sh/uv) for fast dependency resolution.
+- **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/).
+- **Frontend**: A beautiful, modern, and highly responsive React interface designed with Vanilla CSS (Glassmorphism, dark mode, rich micro-animations).
+- Includes robust error handling and input validation across the stack.
+- Organized project structure adhering to modern best practices.
+- Managed by [`uv`](https://github.com/astral-sh/uv) and `npm`.
 
 ## Requirements
 
-- Python >= 3.12
+- Python >= 3.12 (Backend)
+- Node.js >= 18 (Frontend)
 - [uv](https://github.com/astral-sh/uv) (for dependency management)
 
 ## Setup and Running
@@ -84,12 +85,16 @@ Returns the health status of the application.
 unshorten-it/
 ├── Makefile                # Aliases for setup and running the app
 ├── README.md               # Project documentation
-└── backend/                # FastAPI application root
-    ├── app/                
-    │   ├── main.py         # FastAPI application instance and endpoints
-    │   ├── schemas.py      # Pydantic data models for request/response validation
-    │   └── services/
-    │       └── url_service.py # Core business logic to trace URL redirects
-    ├── pyproject.toml      # Project metadata and dependencies
-    └── uv.lock             # Exact locked dependency tree
+├── backend/                # FastAPI application
+│   ├── app/                # Application routes and services
+│   ├── pyproject.toml      # Dependency definitions
+│   └── Dockerfile          # Container configuration
+└── frontend/               # React UI
+    ├── src/
+    │   ├── App.tsx         # Main UI view and fetch logic
+    │   ├── App.css         # Component styling
+    │   ├── index.css       # Global design tokens and animations
+    │   └── main.tsx        # React entrypoint
+    ├── package.json        
+    └── vite.config.ts      # Vite bundler config
 ```

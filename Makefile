@@ -1,11 +1,20 @@
 .PHONY: install run dev clean docker-build docker-run
 
 # Run the FastAPI server in development mode with live reloading
-run:
+run-backend:
 	cd backend && uv run fastapi dev app/main.py --port 8000
 
-# Alias for run
+# Install frontend dependencies
+install-frontend:
+	cd frontend && npm install
+
+# Run the frontend application
+run-frontend:
+	cd frontend && npm run dev
+
+# Alias for run (backend)
 dev: run
+
 
 # Install or sync dependencies using uv
 install:
