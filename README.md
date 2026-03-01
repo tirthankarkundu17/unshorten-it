@@ -4,6 +4,8 @@
 
 ![Unshorten It Demo](docs/recording.gif)
 
+📚 **[Read the Full Architecture & Deployment Documentation](docs/architecture.md)**
+
 ## Features
 
 - **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/).
