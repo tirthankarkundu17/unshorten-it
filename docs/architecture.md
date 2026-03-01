@@ -143,7 +143,7 @@ graph TD
     CF[Cloudflare Edge]
     
     subgraph Raspberry Pi / Home Network
-        Cloudflared[cloudflared daemon (Bare Metal)]
+        Cloudflared["cloudflared daemon (Bare Metal)"]
         
         subgraph Docker Environment
             Traefik[Traefik Proxy\nPublishes :80]
