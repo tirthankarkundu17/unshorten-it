@@ -129,7 +129,11 @@ The application emphasizes developer experience (DX) through a unified Makefile:
 
 Because the Docker images support `linux/arm64` via multi-architecture builds, **Unshorten-It** is perfectly suited for low-power edge devices like a Raspberry Pi. 
 
-To host the application securely and expose it to the internet without opening router ports or dealing with dynamic DNS, you can combine **Traefik** (for internal routing and HTTPS) and **Cloudflare Tunnels** (`cloudflared`).
+To host the application securely and easily add future apps alongside it, we recommend a hybrid deployment:
+1. **Cloudflared (Bare Metal):** Runs directly on the Raspberry Pi OS.
+2. **Docker Network:** A unified `proxy` network is created for container communication.
+3. **Traefik (Docker):** Receives HTTP traffic locally from `cloudflared` and dynamically acts as a reverse proxy for all Docker containers based on labels.
+4. **Unshorten-It (Docker):** The frontend and backend attached to the same Docker network.
 
 ### 7.1 Deployment Architecture Diagram
 
@@ -139,36 +143,50 @@ graph TD
     CF[Cloudflare Edge]
     
     subgraph Raspberry Pi / Home Network
-        Cloudflared[Cloudflared Daemon]
-        Traefik[Traefik Reverse Proxy]
+        Cloudflared[cloudflared daemon (Bare Metal)]
         
-        subgraph Unshorten-It Stack
-            Frontend[Nginx Frontend\nContainer]
-            Backend[FastAPI Backend\nContainer]
+        subgraph Docker Environment
+            Traefik[Traefik Proxy\nPublishes :80]
+            Frontend[Nginx Frontend]
+            Backend[FastAPI Backend]
         end
     end
 
     Internet -->|HTTPS| CF
     CF <==>|Secure Tunnel\nNo open ports| Cloudflared
-    Cloudflared -->|HTTP| Traefik
+    Cloudflared -->|HTTP localhost:80| Traefik
     Traefik -->|Host: unshorten.yourdomain.com| Frontend
     Traefik -->|Path: /api| Backend
 ```
 
 ### 7.2 Configuration Steps
 
-1. **Traefik Network Setup:** Create an external Docker network for services to communicate.
+1. **Docker Network Setup:** Create a unified external Docker network so Traefik and any future containerized apps can communicate.
    ```bash
    docker network create proxy
    ```
 
-2. **Cloudflare Tunnel GUI Setup:**
-   - In Cloudflare Dash, go to **Zero Trust > Networks > Tunnels**.
-   - Create a tunnel and copy the `TUNNEL_TOKEN`.
-   - Add a Public Hostname route (e.g., `unshorten.yourdomain.com`) pointing to the Traefik service: `http://traefik:80`.
+2. **Cloudflare Tunnel (`cloudflared`) Setup:**
+   - Install `cloudflared` directly on your Raspberry Pi OS.
+   - Configure your `~/.cloudflared/config.yml` (or `/etc/cloudflared/config.yml`) to route the public hostname to Traefik on port 80:
+     ```yaml
+     tunnel: <your-tunnel-id>
+     credentials-file: /etc/cloudflared/<your-tunnel-id>.json
+     ingress:
+       # Route traffic for this app into Traefik
+       - hostname: unshorten.yourdomain.com
+         service: http://localhost:80
+       
+       # (Optional) Wildcard route to send ALL subdomains into Traefik
+       # - hostname: *.yourdomain.com
+       #   service: http://localhost:80
+         
+       - service: http_status:404
+     ```
+   - *With a wildcard or individual hostname entries pointing to `localhost:80`, any new docker app you spin up will only need Traefik rules to work; no new Cloudflare config required.*
 
 3. **`docker-compose.prod.yml` Example:**
-   Combine Traefik, `cloudflared`, and your application stacks into one deployment file using Docker labels for dynamic routing.
+   Run Traefik and your unshorten-it containers together. Traefik publishes port 80 to the bare metal Pi so that `cloudflared` can access it.
 
 ```yaml
 version: '3.8'
@@ -176,20 +194,8 @@ version: '3.8'
 networks:
   proxy:
     external: true
-  internal:
 
 services:
-  # Cloudflare Tunnel
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared
-    command: tunnel run
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    networks:
-      - proxy
-    restart: unless-stopped
-
   # Traefik Reverse Proxy
   traefik:
     image: traefik:v2.10
@@ -198,9 +204,10 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"  # Exposed to the host so cloudflared can proxy to it
     networks:
       - proxy
-      - internal
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
@@ -216,7 +223,7 @@ services:
     container_name: unshorten-it-backend
     restart: unless-stopped
     networks:
-      - internal
+      - proxy
     labels:
       - "traefik.enable=true"
       # Route all /api paths to backend
@@ -231,7 +238,7 @@ services:
     environment:
       - API_BASE_URL=https://unshorten.yourdomain.com
     networks:
-      - internal
+      - proxy
     labels:
       - "traefik.enable=true"
       # Route the root paths to frontend
@@ -240,6 +247,6 @@ services:
 ```
 
 ### 7.3 Why this approach?
-- **Security:** Incoming requests hit Cloudflare first (benefiting from WAF and DDoS protection). The tunnel makes the outbound connection from the Raspberry Pi; zero inbound ports are opened on your router.
-- **Simplicity:** Traefik dynamically discovers the `backend` and `frontend` containers based on the labels mapping `/api` to the backend and the root (`/`) to the frontend.
-- **SSL Certificates:** Cloudflare automatically manages HTTPS from the user to their edge and handles the certificates for your domain seamlessly.
+- **Extensibility:** You define a single `proxy` Docker network. Whenever you want to add a new app (like Nextcloud or automated backups), you just start its container on the `proxy` network with appropriate Traefik labels. Traefik will dynamically proxy traffic over `localhost:80`.
+- **Modularity:** Keeping `cloudflared` managed on the OS level (via systemd) allows it to start consistently on boot and maintain the secure tunnel before the Docker daemon spins up.
+- **Security:** Incoming requests hit Cloudflare first. The tunnel makes the outbound connection from the Raspberry Pi bare metal, keeping inward ports shut.
