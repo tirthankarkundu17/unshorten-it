@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -17,11 +19,25 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        // Define the default backend URL (e.g. your production or local network IP)
-        val defaultBackendUrl = "http://localhost:8000/api/v1/unshorten"
+        // In an Android Emulator, localhost refers to the emulator itself. 
+        // 10.0.2.2 is a special alias to your host development machine's loopback interface (localhost).
+        val defaultBackendUrl = "http://10.0.2.2:8000"
         
-        // Let the environment variable override the URL during the build/CI process if it exists
-        val backendUrl = System.getenv("UNSHORTEN_IT_BACKEND") ?: defaultBackendUrl
+        // Load local.properties if it exists
+        val localProperties = Properties()
+        val localPropertiesFile = project.rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        
+        // Strategy: 
+        // 1. Try to read from local.properties
+        // 2. Try to read from System Environment variable (for CI/CD pipelines)
+        // 3. Fallback to default local emulator address
+        val localUrl = localProperties.getProperty("BACKEND_URL")
+        val envUrl = System.getenv("UNSHORTEN_IT_BACKEND")
+        
+        val backendUrl = localUrl ?: envUrl ?: defaultBackendUrl
         
         // Inject this into the generated BuildConfig.java file
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")

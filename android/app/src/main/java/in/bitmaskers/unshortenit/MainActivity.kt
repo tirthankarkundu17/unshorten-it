@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
         .readTimeout(10, TimeUnit.SECONDS)
         .build()
 
-    private val backendUrl = BuildConfig.BACKEND_URL
+    private val backendUrl = BuildConfig.BACKEND_URL + "/api/v1/unshorten"
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
