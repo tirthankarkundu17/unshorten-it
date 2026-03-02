@@ -11,6 +11,9 @@ on:
     branches:
       - main
 
+env:
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -23,7 +26,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        # Login if push to main/tags OR if it's a PR that has the 'build' label
         if: >
           github.event_name == 'push' || 
           (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'build'))
@@ -36,7 +38,7 @@ jobs:
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/unshortenit-backend
+          images: ${{ env.DOCKER_USERNAME }}/unshortenit-backend
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -59,7 +61,7 @@ jobs:
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_USERNAME }}/unshortenit-frontend
+          images: ${{ env.DOCKER_USERNAME }}/unshortenit-frontend
           tags: |
             type=ref,event=branch
             type=ref,event=pr
