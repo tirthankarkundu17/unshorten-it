@@ -1,5 +1,5 @@
 # unshorten-it
-
+[![Docker Build and Push](https://github.com/tirthankarkundu17/unshorten-it/actions/workflows/docker-build-push.yml/badge.svg)](https://github.com/tirthankarkundu17/unshorten-it/actions/workflows/docker-build-push.yml)
 **unshorten-it** is a simple and fast Python FastAPI application that takes a shortened URL as input and follows its redirect chain. It returns a JSON object containing the original URL, the final destination URL, all intermediate redirects, and the total response time.
 
 ![Unshorten It Demo](docs/recording.gif)

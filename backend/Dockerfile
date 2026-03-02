@@ -25,6 +25,13 @@ RUN uv sync --frozen --no-dev
 # Add the virtual environment to the PATH so commands execute inside it
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Set environment variables
+ENV REQUEST_TIMEOUT=15.0
+ARG ALLOW_ORIGINS=""    
+ENV ALLOW_ORIGINS=$ALLOW_ORIGINS
+ARG APP_VERSION="unknown"
+ENV APP_VERSION=$APP_VERSION
+
 # Expose the application port
 EXPOSE 8000
 

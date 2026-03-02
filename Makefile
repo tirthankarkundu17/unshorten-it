@@ -32,7 +32,7 @@ FRONTEND_IMAGE ?= $(DOCKER_USER)/unshortenit-frontend:latest
 
 # Build the Docker image locally
 docker-build-backend:
-	cd backend && docker build -t unshorten-it-backend .
+	cd backend && docker build --build-arg ALLOW_ORIGINS="$(ALLOW_ORIGINS)" --build-arg APP_VERSION="$(APP_VERSION)" -t unshorten-it-backend .
 
 # Run the Docker container locally
 docker-run-backend:
@@ -52,7 +52,7 @@ docker-setup-buildx:
 
 # Multi-arch build and push for backend
 docker-build-push-backend: docker-setup-buildx
-	cd backend && docker buildx build --platform linux/amd64,linux/arm64 -t $(BACKEND_IMAGE) --push .
+	cd backend && docker buildx build --platform linux/amd64,linux/arm64 --build-arg ALLOW_ORIGINS="$(ALLOW_ORIGINS)" --build-arg APP_VERSION="$(APP_VERSION)" -t $(BACKEND_IMAGE) --push .
 
 # Multi-arch build and push for frontend
 docker-build-push-frontend: docker-setup-buildx

@@ -9,6 +9,9 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    environment:
+      - REQUEST_TIMEOUT=15.0
+      - ALLOW_ORIGINS=http://localhost:8080,http://localhost:3000,http://unshorten.bitmaskers.in,https://unshorten.bitmaskers.in
     # Use environment variables for the backend if needed
 
   frontend:

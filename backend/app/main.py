@@ -3,20 +3,31 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import time
+import os
+from pathlib import Path
 
 from .schemas import URLRequest, URLResponse, ErrorResponse
 from .services.url_service import unshorten_url
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Load version from environment variable (injected via Docker/CI)
+__version__ = os.getenv("APP_VERSION", "local-dev")
 
 app = FastAPI(
     title="Unshorten It API",
     description="A simple API to unshorten URLs and view the redirect chain and response times.",
-    version="1.0.0",
+    version=__version__,
 )
 
 # Best practice to add CORS middleware if this will be consumed by a frontend
+allow_origins_str = os.getenv("ALLOW_ORIGINS", "")
+allow_origins_list = [origin.strip() for origin in allow_origins_str.split(",") if origin.strip()]
+print(allow_origins_list)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -51,7 +62,11 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    return {"status": "ok", "timestamp": time.time()}
+    return {
+        "status": "ok",
+        "version": __version__,
+        "timestamp": time.time()
+    }
 
 @app.post(
     "/api/v1/unshorten", 
