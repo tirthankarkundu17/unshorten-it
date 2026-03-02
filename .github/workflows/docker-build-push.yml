@@ -18,64 +18,32 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     
+    # Only run this job if it's a push to main/tags, OR if it's a PR with the 'build' label
+    if: >
+      github.event_name == 'push' || 
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'build'))
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Required for multi-arch (linux/arm64) compiling on GitHub's ubuntu runners
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        if: >
-          github.event_name == 'push' || 
-          (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'build'))
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DOCKER_USERNAME }}/unshortenit-backend
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=sha,format=short
+      - name: Build and push Backend image via Make
+        run: |
+          make docker-build-push-backend DOCKER_USER=$DOCKER_USERNAME
 
-      - name: Build and push Backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          file: ./backend/Dockerfile
-          # Push if push to main/tags OR if it's a PR that has the 'build' label
-          push: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'build')) }}
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract metadata (tags, labels) for Frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DOCKER_USERNAME }}/unshortenit-frontend
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=sha,format=short
-
-      - name: Build and push Frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          # Push if push to main/tags OR if it's a PR that has the 'build' label
-          push: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'build')) }}
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Build and push Frontend image via Make
+        run: |
+          make docker-build-push-frontend DOCKER_USER=$DOCKER_USERNAME
