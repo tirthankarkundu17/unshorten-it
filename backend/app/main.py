@@ -9,7 +9,9 @@ from pathlib import Path
 
 from .schemas import URLRequest, URLResponse, ErrorResponse
 from .services.url_service import unshorten_url
+from dotenv import load_dotenv
 
+load_dotenv()
 # Load version from pyproject.toml (works even without `pip install -e .` style metadata)
 pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
 try:
@@ -28,7 +30,7 @@ app = FastAPI(
 # Best practice to add CORS middleware if this will be consumed by a frontend
 allow_origins_str = os.getenv("ALLOW_ORIGINS", "")
 allow_origins_list = [origin.strip() for origin in allow_origins_str.split(",") if origin.strip()]
-
+print(allow_origins_list)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins_list,
