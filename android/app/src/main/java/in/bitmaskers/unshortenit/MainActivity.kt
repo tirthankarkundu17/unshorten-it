@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
         .readTimeout(10, TimeUnit.SECONDS)
         .build()
 
-    private val backendUrl = "https://unshortenit-backend.onrender.com/api/v1/unshorten"
+    private val backendUrl = BuildConfig.BACKEND_URL
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {

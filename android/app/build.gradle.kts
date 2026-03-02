@@ -16,6 +16,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Define the default backend URL (e.g. your production or local network IP)
+        val defaultBackendUrl = "http://localhost:8000/api/v1/unshorten"
+        
+        // Let the environment variable override the URL during the build/CI process if it exists
+        val backendUrl = System.getenv("UNSHORTEN_IT_BACKEND") ?: defaultBackendUrl
+        
+        // Inject this into the generated BuildConfig.java file
+        buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
     }
 
     buildTypes {
@@ -36,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
