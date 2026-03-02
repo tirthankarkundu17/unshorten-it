@@ -9,6 +9,8 @@ services:
     ports:
       - "8000:8000"
     restart: unless-stopped
+    environment:
+      - REQUEST_TIMEOUT=15.0
     # Use environment variables for the backend if needed
 
   frontend:
