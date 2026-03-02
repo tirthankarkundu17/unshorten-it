@@ -3,14 +3,25 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import time
+import tomllib
+from pathlib import Path
 
 from .schemas import URLRequest, URLResponse, ErrorResponse
 from .services.url_service import unshorten_url
 
+# Load version from pyproject.toml (works even without `pip install -e .` style metadata)
+pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
+try:
+    with open(pyproject_path, "rb") as f:
+        pyproject_data = tomllib.load(f)
+        __version__ = pyproject_data.get("project", {}).get("version", "unknown")
+except Exception:
+    __version__ = "unknown"
+
 app = FastAPI(
     title="Unshorten It API",
     description="A simple API to unshorten URLs and view the redirect chain and response times.",
-    version="1.0.0",
+    version=__version__,
 )
 
 # Best practice to add CORS middleware if this will be consumed by a frontend
@@ -51,7 +62,11 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    return {"status": "ok", "timestamp": time.time()}
+    return {
+        "status": "ok",
+        "version": __version__,
+        "timestamp": time.time()
+    }
 
 @app.post(
     "/api/v1/unshorten", 
