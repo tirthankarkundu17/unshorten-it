@@ -57,7 +57,6 @@ class MainActivity : ComponentActivity() {
         .readTimeout(10, TimeUnit.SECONDS)
         .build()
 
-    // Replace with your actual backend URL or use 10.0.2.2 for local emulator
     private val backendUrl = "https://unshortenit-backend.onrender.com/api/v1/unshorten"
 
     @OptIn(ExperimentalMaterial3Api::class)
