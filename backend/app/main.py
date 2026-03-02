@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import time
+import os
 import tomllib
 from pathlib import Path
 
@@ -25,9 +26,12 @@ app = FastAPI(
 )
 
 # Best practice to add CORS middleware if this will be consumed by a frontend
+allow_origins_str = os.getenv("ALLOW_ORIGINS", "")
+allow_origins_list = [origin.strip() for origin in allow_origins_str.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
