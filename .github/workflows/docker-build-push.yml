@@ -42,7 +42,7 @@ jobs:
 
       - name: Build and push Backend image via Make
         run: |
-          make docker-build-push-backend DOCKER_USER=$DOCKER_USERNAME ALLOW_ORIGINS="${{ vars.ALLOW_ORIGINS }}" APP_VERSION="${{ github.sha }}"
+          make docker-build-push-backend DOCKER_USER=$DOCKER_USERNAME ALLOW_ORIGINS="${{ vars.ALLOW_ORIGINS }}" APP_VERSION="${{ github.event.pull_request.head.sha || github.sha }}"
 
       - name: Build and push Frontend image via Make
         run: |
