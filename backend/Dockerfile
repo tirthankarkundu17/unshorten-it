@@ -27,7 +27,8 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Set environment variables
 ENV REQUEST_TIMEOUT=15.0
-ENV ALLOW_ORIGINS=""
+ARG ALLOW_ORIGINS=""    
+ENV ALLOW_ORIGINS=$ALLOW_ORIGINS
 
 # Expose the application port
 EXPOSE 8000
