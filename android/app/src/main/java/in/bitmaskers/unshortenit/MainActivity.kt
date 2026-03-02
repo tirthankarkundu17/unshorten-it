@@ -183,7 +183,25 @@ class MainActivity : ComponentActivity() {
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                throw Exception("Server returned ${response.code}")
+                val errorBody = response.body?.string()
+                var errorMessage = "Server returned ${response.code}"
+                try {
+                    if (!errorBody.isNullOrEmpty()) {
+                        val errorJson = JSONObject(errorBody)
+                        val errorObject = errorJson.optJSONObject("error")
+                        if (errorObject != null) {
+                            errorMessage = errorObject.optString("message", errorMessage)
+                            if (errorObject.has("detail")) {
+                                errorMessage = errorObject.optString("detail", errorMessage)
+                            }
+                        } else {
+                            errorMessage = errorJson.optString("detail", errorMessage)
+                        }
+                    }
+                } catch (e: Exception) {
+                    // fallback to the default error
+                }
+                throw Exception(errorMessage)
             }
             
             val responseBody = response.body?.string()
