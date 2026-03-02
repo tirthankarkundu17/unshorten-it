@@ -4,7 +4,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import os
-import tomllib
 from pathlib import Path
 
 from .schemas import URLRequest, URLResponse, ErrorResponse
@@ -12,14 +11,9 @@ from .services.url_service import unshorten_url
 from dotenv import load_dotenv
 
 load_dotenv()
-# Load version from pyproject.toml (works even without `pip install -e .` style metadata)
-pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
-try:
-    with open(pyproject_path, "rb") as f:
-        pyproject_data = tomllib.load(f)
-        __version__ = pyproject_data.get("project", {}).get("version", "unknown")
-except Exception:
-    __version__ = "unknown"
+
+# Load version from environment variable (injected via Docker/CI)
+__version__ = os.getenv("APP_VERSION", "local-dev")
 
 app = FastAPI(
     title="Unshorten It API",
