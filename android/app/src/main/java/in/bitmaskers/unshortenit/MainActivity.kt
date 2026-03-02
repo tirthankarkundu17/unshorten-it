@@ -3,6 +3,7 @@ package `in`.bitmaskers.unshortenit
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -26,8 +27,30 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+import com.google.gson.Gson
+import com.google.gson.annotations.SerializedName
+
+data class ErrorDetail(
+    @SerializedName("code") val code: String,
+    @SerializedName("message") val message: String,
+    @SerializedName("detail") val detail: String? = null
+)
+
+data class ErrorResponse(
+    @SerializedName("error") val error: ErrorDetail?,
+    @SerializedName("detail") val detail: String? = null
+)
+
+data class UnshortenResponse(
+    @SerializedName("original_url") val originalUrl: String,
+    @SerializedName("final_url") val finalUrl: String,
+    @SerializedName("redirect_chain") val redirectChain: List<String>?,
+    @SerializedName("response_time_ms") val responseTimeMs: Double
+)
 
 class MainActivity : ComponentActivity() {
+    
+    private val gson = Gson()
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
@@ -42,45 +65,42 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        var incomingUrl = intent?.data?.toString() ?: intent?.getStringExtra(Intent.EXTRA_TEXT)
+        var extractedUrls = emptyList<String>()
+        val incomingText = intent?.data?.toString() ?: intent?.getStringExtra(Intent.EXTRA_TEXT)
 
-        // If we got the text from a Share intent, it might contain extra text (e.g. "Check this out: https://bit.ly/xyz")
-        // Try to extract just the URL using a regex.
-        if (incomingUrl != null && !incomingUrl.startsWith("http")) {
+        if (incomingText != null) {
             val urlRegex = "(https?://[a-zA-Z0-9./_?=&-]+)".toRegex()
-            val match = urlRegex.find(incomingUrl)
-            if (match != null) {
-                incomingUrl = match.value
-            } else {
-                incomingUrl = "http://$incomingUrl" // Fallback, let the backend try
-            }
+            extractedUrls = urlRegex.findAll(incomingText).map { it.value }.toList()
         }
 
         setContent {
             MyApplicationTheme {
                 val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                var expandedUrl by remember { mutableStateOf<String?>(null) }
-                var error by remember { mutableStateOf<String?>(null) }
-                var isLoading by remember { mutableStateOf(incomingUrl != null) }
+                // We'll store a map of originalUrl -> Result (either Safe URL or Error)
+                var processedLinks by remember { mutableStateOf<Map<String, Result<String>>>(emptyMap()) }
+                var isLoading by remember { mutableStateOf(extractedUrls.isNotEmpty()) }
                 var showSheet by remember { mutableStateOf(true) }
 
                 val scope = rememberCoroutineScope()
 
-                LaunchedEffect(incomingUrl) {
-                    if (incomingUrl != null) {
+                LaunchedEffect(extractedUrls) {
+                    if (extractedUrls.isNotEmpty()) {
                         scope.launch {
-                            try {
-                                val result = unshortenUrl(incomingUrl)
-                                expandedUrl = result
-                            } catch (e: Exception) {
-                                error = e.localizedMessage ?: "Failed to unshorten link"
-                            } finally {
-                                isLoading = false
+                            val tempResults = mutableMapOf<String, Result<String>>()
+                            // Unshorten all URLs
+                            extractedUrls.forEach { url ->
+                                try {
+                                    val safeDest = unshortenUrl(url)
+                                    tempResults[url] = Result.success(safeDest)
+                                } catch (e: Exception) {
+                                    tempResults[url] = Result.failure(e)
+                                }
                             }
+                            processedLinks = tempResults
+                            isLoading = false
                         }
                     } else {
                         isLoading = false
-                        error = "No URL provided."
                     }
                 }
 
@@ -110,10 +130,10 @@ class MainActivity : ComponentActivity() {
                             if (isLoading) {
                                 CircularProgressIndicator()
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text("Analyzing link...")
-                            } else if (error != null) {
+                                Text("Analyzing ${extractedUrls.size} link(s)...")
+                            } else if (extractedUrls.isEmpty()) {
                                 Text(
-                                    text = "Error: $error",
+                                    text = "Error: No links found in text.",
                                     color = MaterialTheme.colorScheme.error,
                                     textAlign = TextAlign.Center
                                 )
@@ -122,41 +142,59 @@ class MainActivity : ComponentActivity() {
                                     Text("Close")
                                 }
                             } else {
-                                Text("Original Link:", style = MaterialTheme.typography.labelMedium)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    incomingUrl ?: "",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.height(16.dp))
+                                // Display all discovered links
+                                Column(modifier = Modifier.fillMaxWidth()) {
+                                    processedLinks.forEach { (originalUrl, result) ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp),
+                                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                        ) {
+                                            Column(modifier = Modifier.padding(16.dp)) {
+                                                Text("Original Link:", style = MaterialTheme.typography.labelSmall)
+                                                Text(originalUrl, style = MaterialTheme.typography.bodySmall)
 
-                                Text("Safe Destination:", style = MaterialTheme.typography.labelMedium)
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    expandedUrl ?: "Unknown",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    textAlign = TextAlign.Center
-                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text("Safe Destination:", style = MaterialTheme.typography.labelMedium)
+                                                
+                                                result.onSuccess { safeUrl ->
+                                                    Text(
+                                                        safeUrl,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                    Button(
+                                                        onClick = {
+                                                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(safeUrl))
+                                                            startActivity(browserIntent)
+                                                            finish()
+                                                        },
+                                                        modifier = Modifier.align(Alignment.End)
+                                                    ) {
+                                                        Text("Open Link")
+                                                    }
+                                                }.onFailure { error ->
+                                                    Text(
+                                                        "Error: ${error.localizedMessage}",
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.error
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
 
                                 Spacer(modifier = Modifier.height(24.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                    horizontalArrangement = Arrangement.Center
                                 ) {
                                     TextButton(onClick = { finish() }) {
-                                        Text("Cancel")
-                                    }
-                                    Button(onClick = {
-                                        expandedUrl?.let {
-                                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(it))
-                                            startActivity(browserIntent)
-                                            finish()
-                                        }
-                                    }) {
-                                        Text("Open Link")
+                                        Text("Close")
                                     }
                                 }
                             }
@@ -182,21 +220,17 @@ class MainActivity : ComponentActivity() {
             .build()
 
         client.newCall(request).execute().use { response ->
+            val responseBody = response.body?.string()
+
             if (!response.isSuccessful) {
-                val errorBody = response.body?.string()
                 var errorMessage = "Server returned ${response.code}"
                 try {
-                    if (!errorBody.isNullOrEmpty()) {
-                        val errorJson = JSONObject(errorBody)
-                        val errorObject = errorJson.optJSONObject("error")
-                        if (errorObject != null) {
-                            errorMessage = errorObject.optString("message", errorMessage)
-                            if (errorObject.has("detail")) {
-                                errorMessage = errorObject.optString("detail", errorMessage)
-                            }
-                        } else {
-                            errorMessage = errorJson.optString("detail", errorMessage)
-                        }
+                    if (!responseBody.isNullOrEmpty()) {
+                        val errorJson = gson.fromJson(responseBody, ErrorResponse::class.java)
+                        errorMessage = errorJson.error?.detail 
+                            ?: errorJson.error?.message 
+                            ?: errorJson.detail 
+                            ?: errorMessage
                     }
                 } catch (e: Exception) {
                     // fallback to the default error
@@ -204,21 +238,15 @@ class MainActivity : ComponentActivity() {
                 throw Exception(errorMessage)
             }
             
-            val responseBody = response.body?.string()
             if (responseBody == null) {
                 throw Exception("Empty response body")
             }
             
-            val jsonResponse = JSONObject(responseBody)
-            val destinations = jsonResponse.optJSONArray("redirect_chain")
-            if (destinations != null && destinations.length() > 0) {
-                // The API changed; redirect_chain is now a List[str], not a List containing JSONObjects
-                val lastDest = destinations.getString(destinations.length() - 1)
-                return@withContext lastDest
-            }
+            Log.d("UnshortenIt", "Server Response: $responseBody")
+            val pojoResponse = gson.fromJson(responseBody, UnshortenResponse::class.java)
             
             // Try to falback if unshorten-it API shape has changed
-            return@withContext jsonResponse.optString("final_url", shortUrl)
+            return@withContext pojoResponse.finalUrl
         }
     }
 }
