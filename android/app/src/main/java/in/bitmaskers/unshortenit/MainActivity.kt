@@ -42,7 +42,19 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val incomingUrl = intent?.data?.toString() ?: intent?.getStringExtra(Intent.EXTRA_TEXT)
+        var incomingUrl = intent?.data?.toString() ?: intent?.getStringExtra(Intent.EXTRA_TEXT)
+
+        // If we got the text from a Share intent, it might contain extra text (e.g. "Check this out: https://bit.ly/xyz")
+        // Try to extract just the URL using a regex.
+        if (incomingUrl != null && !incomingUrl.startsWith("http")) {
+            val urlRegex = "(https?://[a-zA-Z0-9./_?=&-]+)".toRegex()
+            val match = urlRegex.find(incomingUrl)
+            if (match != null) {
+                incomingUrl = match.value
+            } else {
+                incomingUrl = "http://$incomingUrl" // Fallback, let the backend try
+            }
+        }
 
         setContent {
             MyApplicationTheme {
@@ -182,8 +194,9 @@ class MainActivity : ComponentActivity() {
             val jsonResponse = JSONObject(responseBody)
             val destinations = jsonResponse.optJSONArray("redirect_chain")
             if (destinations != null && destinations.length() > 0) {
-                val lastDest = destinations.getJSONObject(destinations.length() - 1)
-                return@withContext lastDest.getString("url")
+                // The API changed; redirect_chain is now a List[str], not a List containing JSONObjects
+                val lastDest = destinations.getString(destinations.length() - 1)
+                return@withContext lastDest
             }
             
             // Try to falback if unshorten-it API shape has changed
