@@ -50,14 +50,9 @@ class DashboardViewModel(
             _unshortenError.value = null
             val existingItem = historyRepository.getHistoryByUrl(url)
             if (existingItem != null) {
-                // Return early with the cached version but trigger a reload so it hops back to top
-                // Optionally update its timestamp in DB so it actually jumps to top (deleting old + inserting new)
-                historyRepository.insertHistory(
-                    originalUrl = url,
-                    finalUrl = existingItem.finalUrl,
-                    responseTime = existingItem.responseTime,
-                    redirectChain = null // Keep it visually simple or deserialize it based on how we handle it
-                )
+                // Return early with the cached version, but update its timestamp so it bumps to the top
+                // without creating duplicated rows in the database.
+                historyRepository.updateHistoryTimestamp(existingItem.id)
                 loadHistory(isRefresh = true)
                 _isUnshortening.value = false
                 return@launch

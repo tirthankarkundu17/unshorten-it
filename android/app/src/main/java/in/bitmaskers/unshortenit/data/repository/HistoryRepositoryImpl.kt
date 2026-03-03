@@ -86,6 +86,21 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         item
     }
 
+    override suspend fun updateHistoryTimestamp(id: Long) {
+        withContext(Dispatchers.IO) {
+            val values = ContentValues().apply {
+                put(COLUMN_TIMESTAMP, System.currentTimeMillis())
+            }
+            val db = writableDatabase
+            db.update(
+                TABLE_HISTORY,
+                values,
+                "$COLUMN_ID = ?",
+                arrayOf(id.toString())
+            )
+        }
+    }
+
     override suspend fun getAllHistory(): List<HistoryItem> = withContext(Dispatchers.IO) {
         val historyList = mutableListOf<HistoryItem>()
         val db = readableDatabase

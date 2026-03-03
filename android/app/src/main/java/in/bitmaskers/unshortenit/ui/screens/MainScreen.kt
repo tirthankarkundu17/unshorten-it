@@ -21,11 +21,27 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 
 @Composable
 fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
     val navController = rememberNavController()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadHistory(isRefresh = true)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
     
     // Top Header Background
     val headerColor = Color(0xFF070417)

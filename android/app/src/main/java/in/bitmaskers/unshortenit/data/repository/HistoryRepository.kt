@@ -14,5 +14,7 @@ interface HistoryRepository {
         redirectChain: List<String>?
     ): Long
 
+    suspend fun updateHistoryTimestamp(id: Long)
+    
     suspend fun clearHistory()
 }
