@@ -1,6 +1,7 @@
 import os
 import time
 import httpx
+import re
 from typing import Dict, Any, List
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
@@ -15,16 +16,49 @@ REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "15.0"))
 )
 async def fetch_url_redirects(url: str, timeout: float) -> tuple[List[str], str]:
     redirect_chain: List[str] = []
+    final_url = url
+    
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
-        # We use stream("GET") so that we don't download the body of the final URL
-        # if it happens to be a large file, but we still trigger all redirects
-        # that might require a GET request.
-        async with client.stream("GET", url) as response:
-            # response.history contains the intermediate responses
-            for resp in response.history:
-                redirect_chain.append(str(resp.url))
-            
-            final_url = str(response.url)
+        # Allow up to 5 client-side redirects (e.g. meta refresh or interstitials like LinkedIn)
+        for _ in range(5):
+            # We use stream("GET") so that we don't download the body of the final URL
+            # if it happens to be a large file, but we still trigger all redirects
+            # that might require a GET request.
+            async with client.stream("GET", final_url) as response:
+                # response.history contains the intermediate responses
+                for resp in response.history:
+                    redirect_chain.append(str(resp.url))
+                
+                current_url = str(response.url)
+                
+                # Check for client-side redirects or interstitials if it's text/html
+                content_type = response.headers.get("content-type", "")
+                if "text/html" in content_type:
+                    text_bytes = b""
+                    async for chunk in response.aiter_bytes(chunk_size=4096):
+                        text_bytes += chunk
+                        if len(text_bytes) > 50 * 1024:  # Read at most 50 KB
+                            break
+                    
+                    text_str = text_bytes.decode('utf-8', errors='ignore')
+                    
+                    # 1. LinkedIn Interstitial Redirect
+                    match = re.search(r'data-tracking-control-name="external_url_click"[^>]*href="([^"]+)"', text_str)
+                    if match:
+                        redirect_chain.append(current_url)
+                        final_url = match.group(1).replace("&amp;", "&")
+                        continue
+                    
+                    # 2. Meta Refresh Redirect
+                    meta_refresh = re.search(r'<meta[^>]+http-equiv=["\']refresh["\'][^>]+content=["\']\d+;\s*url=["\']?([^"\'>]+)["\']?', text_str, re.IGNORECASE)
+                    if meta_refresh:
+                        redirect_chain.append(current_url)
+                        final_url = meta_refresh.group(1).replace("&amp;", "&")
+                        continue
+                
+                final_url = current_url
+                break
+
     return redirect_chain, final_url
 
 from .cache_service import cache_service
