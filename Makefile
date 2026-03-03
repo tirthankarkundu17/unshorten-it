@@ -50,8 +50,12 @@ docker-run-frontend:
 docker-setup-buildx:
 	docker buildx create --use --name unshorten-builder || docker buildx use unshorten-builder
 
+# Test backend using pytest
+test-backend:
+	cd backend && uv run pytest tests/
+
 # Multi-arch build and push for backend
-docker-build-push-backend: docker-setup-buildx
+docker-build-push-backend: docker-setup-buildx test-backend
 	cd backend && docker buildx build --platform linux/amd64,linux/arm64 --build-arg ALLOW_ORIGINS="$(ALLOW_ORIGINS)" --build-arg APP_VERSION="$(APP_VERSION)" -t $(BACKEND_IMAGE) --push .
 
 # Multi-arch build and push for frontend
