@@ -36,4 +36,4 @@ ENV APP_VERSION=$APP_VERSION
 EXPOSE 8000
 
 # Command to run the application using the FastAPI CLI
-CMD ["fastapi", "run", "--workers", "1", "app/main.py", "--port", "8000"]
+CMD ["fastapi", "run", "--workers", "3", "app/main.py", "--port", "8000"]
