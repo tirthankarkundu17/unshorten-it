@@ -1,32 +1,15 @@
-package `in`.bitmaskers.unshortenit
+package `in`.bitmaskers.unshortenit.data.repository
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import `in`.bitmaskers.unshortenit.data.model.HistoryItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
-data class HistoryItem(
-    val id: Long,
-    val originalUrl: String,
-    val finalUrl: String,
-    val timestamp: Long,
-    val responseTime: Double,
-    val redirectChain: String
-) {
-    fun getChainList(): List<String> {
-        if (redirectChain.isEmpty()) return emptyList()
-        return try {
-            val type = object : TypeToken<List<String>>() {}.type
-            Gson().fromJson(redirectChain, type) ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-}
-
-class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION), HistoryRepository {
 
     companion object {
         private const val DATABASE_NAME = "unshorten_history.db"
@@ -57,12 +40,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         onCreate(db)
     }
 
-    fun insertHistory(
-        originalUrl: String, 
-        finalUrl: String, 
-        responseTime: Double, 
+    override suspend fun insertHistory(
+        originalUrl: String,
+        finalUrl: String,
+        responseTime: Double,
         redirectChain: List<String>?
-    ): Long {
+    ): Long = withContext(Dispatchers.IO) {
         val values = ContentValues()
         values.put(COLUMN_ORIGINAL_URL, originalUrl)
         values.put(COLUMN_FINAL_URL, finalUrl)
@@ -70,13 +53,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         values.put(COLUMN_RESPONSE_TIME, responseTime)
         values.put(COLUMN_REDIRECT_CHAIN, Gson().toJson(redirectChain ?: emptyList<String>()))
 
-        val db = this.writableDatabase
-        return db.insert(TABLE_HISTORY, null, values)
+        val db = writableDatabase
+        db.insert(TABLE_HISTORY, null, values)
     }
 
-    fun getAllHistory(): List<HistoryItem> {
+    override suspend fun getAllHistory(): List<HistoryItem> = withContext(Dispatchers.IO) {
         val historyList = mutableListOf<HistoryItem>()
-        val db = this.readableDatabase
+        val db = readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_HISTORY ORDER BY $COLUMN_TIMESTAMP DESC", null)
 
         if (cursor.moveToFirst()) {
@@ -85,22 +68,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 val originalUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ORIGINAL_URL))
                 val finalUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FINAL_URL))
                 val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
-                
-                // For older DB versions where these might be null
+
                 val responseTimeIdx = cursor.getColumnIndex(COLUMN_RESPONSE_TIME)
                 val responseTime = if (responseTimeIdx != -1 && !cursor.isNull(responseTimeIdx)) {
                     cursor.getDouble(responseTimeIdx)
                 } else 0.0
-                
+
                 val chainIdx = cursor.getColumnIndex(COLUMN_REDIRECT_CHAIN)
                 val redirectChain = if (chainIdx != -1 && !cursor.isNull(chainIdx)) {
                     cursor.getString(chainIdx)
                 } else "[]"
-                
+
                 historyList.add(HistoryItem(id, originalUrl, finalUrl, timestamp, responseTime, redirectChain))
             } while (cursor.moveToNext())
         }
         cursor.close()
-        return historyList
+        historyList
     }
 }

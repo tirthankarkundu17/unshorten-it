@@ -2,7 +2,7 @@ package `in`.bitmaskers.unshortenit.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import `in`.bitmaskers.unshortenit.HistoryItem
+import `in`.bitmaskers.unshortenit.data.model.HistoryItem
 import `in`.bitmaskers.unshortenit.data.repository.HistoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

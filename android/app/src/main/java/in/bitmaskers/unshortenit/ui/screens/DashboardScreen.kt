@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import `in`.bitmaskers.unshortenit.HistoryItem
+import `in`.bitmaskers.unshortenit.data.model.HistoryItem
 import `in`.bitmaskers.unshortenit.ui.components.BadgeContainer
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState

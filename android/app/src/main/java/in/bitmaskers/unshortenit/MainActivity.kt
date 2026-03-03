@@ -6,7 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
-import `in`.bitmaskers.unshortenit.data.repository.HistoryRepository
+import `in`.bitmaskers.unshortenit.data.repository.HistoryRepositoryImpl
 import `in`.bitmaskers.unshortenit.data.repository.UnshortenRepository
 import `in`.bitmaskers.unshortenit.ui.screens.DashboardScreen
 import `in`.bitmaskers.unshortenit.ui.screens.InterceptorScreen
@@ -27,8 +27,7 @@ class MainActivity : ComponentActivity() {
             extractedUrls = urlRegex.findAll(incomingText).map { it.value }.toList()
         }
 
-        val dbHelper = DatabaseHelper(this)
-        val historyRepository = HistoryRepository(dbHelper)
+        val historyRepository = HistoryRepositoryImpl(this)
         val unshortenRepository = UnshortenRepository()
         val viewModelFactory = AppViewModelFactory(historyRepository, unshortenRepository)
 
