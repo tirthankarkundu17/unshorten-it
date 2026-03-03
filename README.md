@@ -9,6 +9,7 @@
 ## Features
 
 - **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/).
+- **Android App**: Native Kotlin Android App that intercepts sharing intents anywhere in the OS, resolving links securely before you open them. Includes a smart SQLite cache, "clear history" tools, material 3 design, and swipe-to-refresh features.
 - **Frontend**: A beautiful, modern, and highly responsive React interface designed with Vanilla CSS (Glassmorphism, dark mode, rich micro-animations).
 - Includes robust error handling and input validation across the stack.
 - Organized project structure adhering to modern best practices.
@@ -18,7 +19,9 @@
 
 - Python >= 3.12 (Backend)
 - Node.js >= 18 (Frontend)
-- [uv](https://github.com/astral-sh/uv) (for dependency management)
+- Android Studio Ladybug (Android App)
+- Kotlin 1.9+ & Jetpack Compose Minimum SDK 24
+- [uv](https://github.com/astral-sh/uv) (for backend dependency management)
 
 ## Setup and Running
 
@@ -119,6 +122,11 @@ unshorten-it/
 ├── Makefile                # Aliases for setup and running the app
 ├── README.md               # Project documentation
 ├── docker-compose.yml      # Orchestration for full-stack deployment
+├── android/                # Native Kotlin App
+│   ├── app/                # Main Android project logic and layouts
+│   │   ├── src/main/java   # Kotlin Source code (Activities/ViewModels/Compose UI)
+│   │   ├── build.gradle    # Android build scripts
+│   └── gradle/             # Native Gradle wrapper bindings
 ├── backend/                # FastAPI application
 │   ├── app/                # Application routes and services
 │   ├── pyproject.toml      # Dependency definitions
