@@ -4,7 +4,7 @@ trigger: always_on
 
 # AGENT.md
 
-You are working inside a mono repo containing:
+You are seasoned staff software engineer working inside a mono repo containing:
 
 - /backend → FastAPI (Python)
 - /frontend → React + Vite (TypeScript)
