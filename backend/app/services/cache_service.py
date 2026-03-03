@@ -41,11 +41,20 @@ class CacheService:
     def _fallback_to_diskcache(self):
         # Fallback to local disk cache, accessible across workers
         cache_dir = os.getenv("DISKCACHE_DIR", "/tmp/cacheservice")
+        
+        # Load max cache size in MB (default 500 MB)
+        try:
+            size_limit_mb = int(os.getenv("DISKCACHE_SIZE_LIMIT_MB", "500"))
+        except ValueError:
+            size_limit_mb = 500
+            
+        size_limit_bytes = size_limit_mb * 1024 * 1024
+        
         try:
             os.makedirs(cache_dir, exist_ok=True)
             # diskcache is thread-safe and process-safe (uses SQLite)
-            self.disk_cache = diskcache.Cache(cache_dir)
-            logger.info(f"Initialized DiskCache at {cache_dir}")
+            self.disk_cache = diskcache.Cache(cache_dir, size_limit=size_limit_bytes)
+            logger.info(f"Initialized DiskCache at {cache_dir} with max size {size_limit_mb}MB")
         except Exception as e:
             logger.error(f"Failed to initialize DiskCache: {e}")
 
