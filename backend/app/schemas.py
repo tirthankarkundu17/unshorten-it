@@ -17,3 +17,4 @@ class URLResponse(BaseModel):
     final_url: str
     redirect_chain: List[str]
     response_time_ms: float
+    cached: bool = False
