@@ -57,6 +57,35 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         db.insert(TABLE_HISTORY, null, values)
     }
 
+    override suspend fun getHistoryByUrl(url: String): HistoryItem? = withContext(Dispatchers.IO) {
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            "SELECT * FROM $TABLE_HISTORY WHERE $COLUMN_ORIGINAL_URL = ? ORDER BY $COLUMN_TIMESTAMP DESC LIMIT 1",
+            arrayOf(url)
+        )
+
+        var item: HistoryItem? = null
+        if (cursor.moveToFirst()) {
+            val id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_ID))
+            val finalUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FINAL_URL))
+            val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
+
+            val responseTimeIdx = cursor.getColumnIndex(COLUMN_RESPONSE_TIME)
+            val responseTime = if (responseTimeIdx != -1 && !cursor.isNull(responseTimeIdx)) {
+                cursor.getDouble(responseTimeIdx)
+            } else 0.0
+
+            val chainIdx = cursor.getColumnIndex(COLUMN_REDIRECT_CHAIN)
+            val redirectChain = if (chainIdx != -1 && !cursor.isNull(chainIdx)) {
+                cursor.getString(chainIdx)
+            } else "[]"
+
+            item = HistoryItem(id, url, finalUrl, timestamp, responseTime, redirectChain)
+        }
+        cursor.close()
+        item
+    }
+
     override suspend fun getAllHistory(): List<HistoryItem> = withContext(Dispatchers.IO) {
         val historyList = mutableListOf<HistoryItem>()
         val db = readableDatabase
@@ -84,5 +113,12 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         }
         cursor.close()
         historyList
+    }
+
+    override suspend fun clearHistory() {
+        withContext(Dispatchers.IO) {
+            val db = writableDatabase
+            db.delete(TABLE_HISTORY, null, null)
+        }
     }
 }

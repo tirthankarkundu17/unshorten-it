@@ -48,7 +48,21 @@ class DashboardViewModel(
         viewModelScope.launch {
             _isUnshortening.value = true
             _unshortenError.value = null
-            
+            val existingItem = historyRepository.getHistoryByUrl(url)
+            if (existingItem != null) {
+                // Return early with the cached version but trigger a reload so it hops back to top
+                // Optionally update its timestamp in DB so it actually jumps to top (deleting old + inserting new)
+                historyRepository.insertHistory(
+                    originalUrl = url,
+                    finalUrl = existingItem.finalUrl,
+                    responseTime = existingItem.responseTime,
+                    redirectChain = null // Keep it visually simple or deserialize it based on how we handle it
+                )
+                loadHistory(isRefresh = true)
+                _isUnshortening.value = false
+                return@launch
+            }
+
             val result = unshortenRepository.unshortenUrl(url)
             result.onSuccess { response ->
                 try {
@@ -67,6 +81,17 @@ class DashboardViewModel(
             }
             
             _isUnshortening.value = false
+        }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch {
+            try {
+                historyRepository.clearHistory()
+                loadHistory(isRefresh = true)
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("Failed to clear history")
+            }
         }
     }
 }

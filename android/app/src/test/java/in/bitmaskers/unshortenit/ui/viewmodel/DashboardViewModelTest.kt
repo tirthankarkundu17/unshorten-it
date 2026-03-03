@@ -19,6 +19,7 @@ class DashboardViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val historyRepository: HistoryRepository = mockk()
+    private val unshortenRepository: `in`.bitmaskers.unshortenit.data.repository.UnshortenRepository = mockk()
 
     @Test
     fun `loadHistory success updates UI state to Success with data`() = runTest {
@@ -29,7 +30,7 @@ class DashboardViewModelTest {
         coEvery { historyRepository.getAllHistory() } returns mockItems
 
         // Act
-        val viewModel = DashboardViewModel(historyRepository)
+        val viewModel = DashboardViewModel(historyRepository, unshortenRepository)
 
         // Assert
         val state = viewModel.uiState.value
@@ -44,7 +45,7 @@ class DashboardViewModelTest {
         coEvery { historyRepository.getAllHistory() } throws RuntimeException(errorMessage)
 
         // Act
-        val viewModel = DashboardViewModel(historyRepository)
+        val viewModel = DashboardViewModel(historyRepository, unshortenRepository)
 
         // Assert
         val state = viewModel.uiState.value
@@ -59,7 +60,7 @@ class DashboardViewModelTest {
             HistoryItem(1L, "http://another.url", "http://long.val", 123456L, 120.0, "[]")
         )
         coEvery { historyRepository.getAllHistory() } returns mockItems
-        val viewModel = DashboardViewModel(historyRepository)
+        val viewModel = DashboardViewModel(historyRepository, unshortenRepository)
         // Ensure state is fully resolved by Unconfined dispatcher from init
 
         coEvery { historyRepository.getAllHistory() } returns emptyList()

@@ -30,12 +30,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.bitmaskers.unshortenit.data.model.HistoryItem
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState) {
         if (uiState !is UiState.Loading) {
@@ -51,12 +53,36 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
     ) {
         // History Header
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "History",
-                color = Color(0xFF64748B),
-                fontSize = 14.sp,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "History",
+                    color = Color(0xFF64748B),
+                    fontSize = 14.sp
+                )
+                
+                if (uiState is UiState.Success && (uiState as UiState.Success).data.isNotEmpty()) {
+                    TextButton(
+                        onClick = { viewModel.clearHistory() },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                        modifier = Modifier.heightIn(min = 24.dp)
+                    ) {
+                        Text(
+                            text = "Clear All",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                } else if (uiState !is UiState.Success) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
+            }
             HorizontalDivider(color = Color(0xFFE2E8F0))
         }
 
@@ -73,21 +99,40 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
                 }
             }
             is UiState.Success -> {
-                PullToRefreshBox(
-                    isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        viewModel.loadHistory(isRefresh = true)
-                    },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 24.dp)
+                if (state.data.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Rounded.ContentCopy,
+                                contentDescription = "Empty",
+                                modifier = Modifier.size(48.dp),
+                                tint = Color(0xFFCBD5E1)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("No history found", color = Color(0xFF94A3B8), fontSize = 16.sp)
+                        }
+                    }
+                } else {
+                    PullToRefreshBox(
+                        isRefreshing = isRefreshing,
+                        onRefresh = {
+                            isRefreshing = true
+                            viewModel.loadHistory(isRefresh = true)
+                            coroutineScope.launch {
+                                kotlinx.coroutines.delay(500)
+                                isRefreshing = false
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        items(state.data, key = { it.id }) { item ->
-                            FlatHistoryCard(item)
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 24.dp)
+                        ) {
+                            items(state.data, key = { it.id }) { item ->
+                                FlatHistoryCard(item)
+                                HorizontalDivider(color = Color(0xFFF1F5F9))
+                            }
                         }
                     }
                 }
