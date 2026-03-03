@@ -20,6 +20,8 @@ from .services.cache_service import cache_service
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize cache settings now that .env is loaded
+    cache_service.initialize()
     yield
     # Clean up cache connections on shutdown
     await cache_service.close()

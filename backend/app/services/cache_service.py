@@ -12,19 +12,19 @@ if not logger.handlers:
     console_handler.setFormatter(logging.Formatter('%(levelname)s:\t  %(message)s'))
     logger.addHandler(console_handler)
 
-# Cache duration: 24 hours (86400 seconds) by default
-try:
-    DEFAULT_CACHE_EXPIRE = int(os.getenv("CACHE_EXPIRE_SECONDS", str(24 * 60 * 60)))
-except ValueError:
-    DEFAULT_CACHE_EXPIRE = 24 * 60 * 60
-
 class CacheService:
     def __init__(self):
         self.redis_client: Optional[redis.Redis] = None
         self.disk_cache: Optional[diskcache.Cache] = None
-        self._initialize_cache()
+        self.default_cache_expire: int = 24 * 60 * 60
+        # Initialization is deferred
 
-    def _initialize_cache(self):
+    def initialize(self):
+        try:
+            self.default_cache_expire = int(os.getenv("CACHE_EXPIRE_SECONDS", str(24 * 60 * 60)))
+        except ValueError:
+            self.default_cache_expire = 24 * 60 * 60
+            
         redis_url = os.getenv("REDIS_URL")
         
         if redis_url:
@@ -69,7 +69,9 @@ class CacheService:
         
         return None
 
-    async def set_cached_url(self, url: str, data: Dict[str, Any], expire: int = DEFAULT_CACHE_EXPIRE):
+    async def set_cached_url(self, url: str, data: Dict[str, Any], expire: Optional[int] = None):
+        if expire is None:
+            expire = self.default_cache_expire
         try:
             json_data = json.dumps(data)
             if self.redis_client is not None:
