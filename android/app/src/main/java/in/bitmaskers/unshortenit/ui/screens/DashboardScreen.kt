@@ -43,7 +43,7 @@ fun DashboardScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
 
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         "URL History",
