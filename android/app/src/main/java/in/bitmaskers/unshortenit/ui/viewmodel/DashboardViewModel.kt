@@ -19,9 +19,11 @@ class DashboardViewModel(
         loadHistory()
     }
 
-    fun loadHistory() {
+    fun loadHistory(isRefresh: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = UiState.Loading
+            if (!isRefresh) {
+                _uiState.value = UiState.Loading
+            }
             try {
                 val historyItems = historyRepository.getAllHistory()
                 _uiState.value = UiState.Success(historyItems)
