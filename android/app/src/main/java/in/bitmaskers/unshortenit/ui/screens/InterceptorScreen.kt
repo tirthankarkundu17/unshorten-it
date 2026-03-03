@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.rounded.Cable
+import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.*
@@ -67,14 +68,15 @@ fun InterceptorScreen(
 
                 when (val state = uiState) {
                     is UiState.Loading -> {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.primary,
-                            strokeWidth = 3.dp,
-                            modifier = Modifier.size(48.dp)
-                        )
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            `in`.bitmaskers.unshortenit.ui.components.ShimmerCard()
+                        }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "Analyzing link(s)...",
+                            "Analyzing ${urlsToProcess.size} link(s)...",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -142,7 +144,19 @@ fun InterceptorScreen(
                                                 overflow = TextOverflow.Ellipsis
                                             )
 
-                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                contentAlignment = Alignment.CenterStart
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.ArrowDownward,
+                                                    contentDescription = "To",
+                                                    modifier = Modifier.size(20.dp).padding(start = 2.dp),
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
 
                                             result.onSuccess { response ->
                                                 Text(
