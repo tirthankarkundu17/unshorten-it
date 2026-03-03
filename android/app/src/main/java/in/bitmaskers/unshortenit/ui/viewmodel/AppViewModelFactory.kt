@@ -13,7 +13,7 @@ class AppViewModelFactory(
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
-            return DashboardViewModel(historyRepository) as T
+            return DashboardViewModel(historyRepository, unshortenRepository) as T
         }
         if (modelClass.isAssignableFrom(InterceptorViewModel::class.java)) {
             return InterceptorViewModel(unshortenRepository, historyRepository) as T

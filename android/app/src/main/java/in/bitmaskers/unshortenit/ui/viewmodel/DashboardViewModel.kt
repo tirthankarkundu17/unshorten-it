@@ -8,9 +8,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+import `in`.bitmaskers.unshortenit.data.repository.UnshortenRepository
+
 class DashboardViewModel(
-    private val historyRepository: HistoryRepository
+    private val historyRepository: HistoryRepository,
+    private val unshortenRepository: UnshortenRepository
 ) : ViewModel() {
+
+    private val _isUnshortening = MutableStateFlow(false)
+    val isUnshortening: StateFlow<Boolean> = _isUnshortening
+    
+    private val _unshortenError = MutableStateFlow<String?>(null)
+    val unshortenError: StateFlow<String?> = _unshortenError
 
     private val _uiState = MutableStateFlow<UiState<List<HistoryItem>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<HistoryItem>>> = _uiState
@@ -30,6 +39,34 @@ class DashboardViewModel(
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Failed to load history")
             }
+        }
+    }
+
+    fun unshortenUrl(url: String) {
+        if (url.isBlank()) return
+        
+        viewModelScope.launch {
+            _isUnshortening.value = true
+            _unshortenError.value = null
+            
+            val result = unshortenRepository.unshortenUrl(url)
+            result.onSuccess { response ->
+                try {
+                    historyRepository.insertHistory(
+                        originalUrl = url,
+                        finalUrl = response.finalUrl,
+                        responseTime = response.responseTimeMs,
+                        redirectChain = response.redirectChain
+                    )
+                    loadHistory(isRefresh = true)
+                } catch (e: Exception) {
+                    _unshortenError.value = "Failed to save to history"
+                }
+            }.onFailure { e ->
+                _unshortenError.value = e.message ?: "Failed to unshorten URL"
+            }
+            
+            _isUnshortening.value = false
         }
     }
 }
