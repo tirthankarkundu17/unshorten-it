@@ -8,7 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import `in`.bitmaskers.unshortenit.data.repository.HistoryRepositoryImpl
 import `in`.bitmaskers.unshortenit.data.repository.UnshortenRepository
-import `in`.bitmaskers.unshortenit.ui.screens.DashboardScreen
+import `in`.bitmaskers.unshortenit.ui.screens.MainScreen
 import `in`.bitmaskers.unshortenit.ui.screens.InterceptorScreen
 import `in`.bitmaskers.unshortenit.ui.theme.MyApplicationTheme
 import `in`.bitmaskers.unshortenit.ui.viewmodel.AppViewModelFactory
@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 if (extractedUrls.isEmpty()) {
-                    DashboardScreen(
+                    MainScreen(
                         viewModel = viewModel(factory = viewModelFactory),
                         onFinish = { finish() }
                     )
