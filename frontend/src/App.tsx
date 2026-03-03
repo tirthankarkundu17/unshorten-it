@@ -7,6 +7,7 @@ interface UnshortenResponse {
   final_url: string;
   redirect_chain: string[];
   response_time_ms: number;
+  cached: boolean;
 }
 
 interface ErrorResponse {
@@ -117,6 +118,11 @@ function App() {
               <div className="stat">
                 <Clock size={16} className="stat-icon" />
                 <span>Traced in <strong>{result.response_time_ms}ms</strong></span>
+                {result.cached && (
+                  <span style={{ marginLeft: '8px', fontSize: '0.75rem', padding: '2px 6px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px' }}>
+                    Cached
+                  </span>
+                )}
               </div>
               <div className="stat">
                 <LinkIcon size={16} className="stat-icon" />

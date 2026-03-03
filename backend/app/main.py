@@ -15,10 +15,22 @@ load_dotenv()
 # Load version from environment variable (injected via Docker/CI)
 __version__ = os.getenv("APP_VERSION", "local-dev")
 
+from contextlib import asynccontextmanager
+from .services.cache_service import cache_service
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize cache settings now that .env is loaded
+    cache_service.initialize()
+    yield
+    # Clean up cache connections on shutdown
+    await cache_service.close()
+
 app = FastAPI(
     title="Unshorten It API",
     description="A simple API to unshorten URLs and view the redirect chain and response times.",
     version=__version__,
+    lifespan=lifespan,
 )
 
 # Best practice to add CORS middleware if this will be consumed by a frontend

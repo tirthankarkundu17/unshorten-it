@@ -27,8 +27,22 @@ async def fetch_url_redirects(url: str, timeout: float) -> tuple[List[str], str]
             final_url = str(response.url)
     return redirect_chain, final_url
 
+from .cache_service import cache_service
+
 async def unshorten_url(url: str) -> Dict[str, Any]:
     start_time = time.perf_counter()
+    
+    # Check cache first
+    cached_result = await cache_service.get_cached_url(url)
+    if cached_result:
+        end_time = time.perf_counter()
+        return {
+            "original_url": url,
+            "final_url": cached_result["final_url"],
+            "redirect_chain": cached_result["redirect_chain"],
+            "response_time_ms": round((end_time - start_time) * 1000, 2),
+            "cached": True
+        }
     
     try:
         redirect_chain, final_url = await fetch_url_redirects(url, REQUEST_TIMEOUT)
@@ -39,10 +53,19 @@ async def unshorten_url(url: str) -> Dict[str, Any]:
         }
 
     end_time = time.perf_counter()
-
-    return {
+    
+    result = {
         "original_url": url,
         "final_url": final_url,
         "redirect_chain": redirect_chain,
-        "response_time_ms": round((end_time - start_time) * 1000, 2)
+        "response_time_ms": round((end_time - start_time) * 1000, 2),
+        "cached": False
     }
+
+    # Save to cache asynchronously without blocking the return
+    await cache_service.set_cached_url(url, {
+        "final_url": final_url,
+        "redirect_chain": redirect_chain
+    })
+
+    return result

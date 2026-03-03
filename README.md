@@ -8,7 +8,7 @@
 
 ## Features
 
-- **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/).
+- **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/). Features a Hybrid Cache (Redis & DiskCache) for blazing fast responses.
 - **Android App**: Native Kotlin Android App that intercepts sharing intents anywhere in the OS, resolving links securely before you open them. Includes a smart SQLite cache, "clear history" tools, material 3 design, and swipe-to-refresh features.
 - **Frontend**: A beautiful, modern, and highly responsive React interface designed with Vanilla CSS (Glassmorphism, dark mode, rich micro-animations).
 - Includes robust error handling and input validation across the stack.
@@ -104,9 +104,20 @@ Once the server is running, you can access the interactive API documentation (Sw
     "https://bit.ly/3xyz123",
     "https://example.com/intermediate"
   ],
-  "response_time_ms": 154.32
+  "response_time_ms": 154.32,
+  "cached": false
 }
 ```
+
+### 2. Caching Configuration
+
+The backend supports a Hybrid Caching approach out of the box to maximize performance across multiple workers:
+- **Redis (Recommended)**: Used automatically when you define a `REDIS_URL` environment variable (e.g., `redis://redis:6379/1`). Docker-compose is already configured to use this.
+- **DiskCache**: A SQLite-backed disk cache used across FastAPI workers when Redis is not available (such as a single Docker container deployment).
+
+**Environment Variables:**
+- `CACHE_EXPIRE_SECONDS`: Controls how long domain redirects stay in the cache (default is `86400` seconds / 24 hours).
+- `REDIS_URL`: The Redis connection string to use. If omitted, falls back to `DiskCache`.
 
 ### 2. Health Check
 

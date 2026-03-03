@@ -12,6 +12,8 @@ services:
     environment:
       - REQUEST_TIMEOUT=15.0
       - ALLOW_ORIGINS=http://localhost:8080,http://localhost:3000,http://unshorten.bitmaskers.in,https://unshorten.bitmaskers.in
+      - REDIS_URL=redis://redis:6379/1
+      - CACHE_EXPIRE_SECONDS=86400
     # Use environment variables for the backend if needed
 
   frontend:
@@ -27,3 +29,15 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+
+  redis:
+    image: redis:alpine
+    container_name: unshorten-it-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
