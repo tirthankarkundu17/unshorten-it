@@ -203,7 +203,10 @@ fun InterceptorScreen(
                                                             Intent.ACTION_VIEW,
                                                             Uri.parse(response.finalUrl)
                                                         )
-                                                        context.startActivity(browserIntent)
+                                                        browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                        context.startActivity(
+                                                            Intent.createChooser(browserIntent, "Open with")
+                                                        )
                                                         onFinish()
                                                     },
                                                     modifier = Modifier.align(Alignment.End),

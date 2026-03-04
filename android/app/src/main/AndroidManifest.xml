@@ -23,14 +23,42 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Intent filter for ANY short links (all web links) -->
+            <!-- Intent filter for known URL shortener domains -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="http" />
                 <data android:scheme="https" />
-                <data android:host="*" />
+
+                <!-- Popular URL shorteners -->
+                <data android:host="bit.ly" />
+                <data android:host="tinyurl.com" />
+                <data android:host="t.co" />
+                <data android:host="goo.gl" />
+                <data android:host="ow.ly" />
+                <data android:host="is.gd" />
+                <data android:host="buff.ly" />
+                <data android:host="adf.ly" />
+                <data android:host="bl.ink" />
+                <data android:host="lnkd.in" />
+                <data android:host="db.tt" />
+                <data android:host="qr.ae" />
+                <data android:host="cur.lv" />
+                <data android:host="rebrand.ly" />
+                <data android:host="rb.gy" />
+                <data android:host="shorturl.at" />
+                <data android:host="tiny.cc" />
+                <data android:host="x.co" />
+                <data android:host="yourls.org" />
+                <data android:host="v.gd" />
+                <data android:host="surl.li" />
+                <data android:host="shortcm.li" />
+                <data android:host="clck.ru" />
+                <data android:host="t.ly" />
+                <data android:host="cutt.ly" />
+                <data android:host="tiny.jio.com" />
             </intent-filter>
 
             <!-- Intent filter for sharing text to the app -->
