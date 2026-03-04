@@ -1,16 +1,29 @@
 package `in`.bitmaskers.unshortenit.ui.screens
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -53,6 +66,24 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
             .padding(innerPadding)
             .background(Color(0xFFF9FAFB))
     ) {
+        // Link Setup Banner (only on Android 12+ where manual enable is needed)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val prefs = context.getSharedPreferences("app_prefs", 0)
+            var showBanner by remember { mutableStateOf(!prefs.getBoolean("link_setup_dismissed", false)) }
+
+            AnimatedVisibility(
+                visible = showBanner,
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                LinkSetupBanner(
+                    onDismiss = {
+                        prefs.edit().putBoolean("link_setup_dismissed", true).apply()
+                        showBanner = false
+                    }
+                )
+            }
+        }
+
         // Input Section
         Column(
             modifier = Modifier
@@ -96,21 +127,28 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    keyboardController?.hide()
-                    focusManager.clearFocus()
-                    viewModel.unshortenUrl(inputUrl)
-                },
+            val gradientAlpha = if (!isUnshortening) 1f else 0.6f
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF81838A), // Gray as seen in screenshot
-                    contentColor = Color.White
-                ),
-                enabled = !isUnshortening
+                    .height(56.dp)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF4F46E5).copy(alpha = gradientAlpha),
+                                Color(0xFF7C3AED).copy(alpha = gradientAlpha)
+                            )
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    .then(
+                        if (!isUnshortening) Modifier.clickable {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            viewModel.unshortenUrl(inputUrl)
+                        } else Modifier
+                    ),
+                contentAlignment = Alignment.Center
             ) {
                 if (isUnshortening) {
                     CircularProgressIndicator(
@@ -119,17 +157,21 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Icon(
-                        imageVector = Icons.Rounded.AutoAwesome,
-                        contentDescription = "Unshorten",
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Unshorten URL",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Rounded.AutoAwesome,
+                            contentDescription = "Unshorten",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Unshorten URL",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
@@ -152,6 +194,108 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                     shadowElevation = 2.dp
                 ) {
                     FlatHistoryCard(item = latestItem)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LinkSetupBanner(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color(0xFF4F46E5), Color(0xFF7C3AED))
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(16.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.TouchApp,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Enable Link Interception",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    }
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = "Dismiss",
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "To intercept shortened links when you tap them, enable all supported links in Settings.",
+                    fontSize = 13.sp,
+                    color = Color.White.copy(alpha = 0.9f),
+                    lineHeight = 18.sp
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        val intent = Intent(
+                            Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS,
+                            Uri.parse("package:${context.packageName}")
+                        )
+                        context.startActivity(intent)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color(0xFF4F46E5)
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.OpenInNew,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Open Settings",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp
+                    )
                 }
             }
         }
