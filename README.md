@@ -9,7 +9,7 @@
 ## Features
 
 - **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/). Features a Hybrid Cache (Redis & DiskCache) for blazing fast responses.
-- **Android App**: Native Kotlin Android App that intercepts sharing intents anywhere in the OS, resolving links securely before you open them. Includes a smart SQLite cache, "clear history" tools, material 3 design, and swipe-to-refresh features.
+- **Android App**: Native Kotlin Android App that intercepts sharing intents anywhere in the OS, resolving links securely before you open them. Includes a smart SQLite cache, "clear history" tools, material 3 design, and swipe-to-refresh features. **[Get it on Google Play](https://play.google.com/store/apps/details?id=in.bitmaskers.unshortenit)**
 - **Frontend**: A beautiful, modern, and highly responsive React interface designed with Vanilla CSS (Glassmorphism, dark mode, rich micro-animations).
 - Includes robust error handling and input validation across the stack.
 - Organized project structure adhering to modern best practices.
