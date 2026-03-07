@@ -12,12 +12,14 @@ import `in`.bitmaskers.unshortenit.ui.screens.MainScreen
 import `in`.bitmaskers.unshortenit.ui.screens.InterceptorScreen
 import `in`.bitmaskers.unshortenit.ui.theme.MyApplicationTheme
 import `in`.bitmaskers.unshortenit.ui.viewmodel.AppViewModelFactory
+import com.google.android.gms.ads.MobileAds
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        MobileAds.initialize(this) {}
 
         var extractedUrls = emptyList<String>()
         val incomingText = intent?.data?.toString() ?: intent?.getStringExtra(Intent.EXTRA_TEXT)
