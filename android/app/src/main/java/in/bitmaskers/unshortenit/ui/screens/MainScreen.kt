@@ -2,6 +2,7 @@ package `in`.bitmaskers.unshortenit.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.History
@@ -19,19 +20,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
-    val navController = rememberNavController()
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
     
     DisposableEffect(lifecycleOwner) {
@@ -81,49 +79,45 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
             }
         },
         bottomBar = {
-            BottomNavigation(navController = navController)
+            BottomNavigation(pagerState = pagerState, coroutineScope = coroutineScope)
         },
         containerColor = Color(0xFFF9FAFB)
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "dashboard"
-        ) {
-            composable("dashboard") {
-                DashboardScreen(viewModel = viewModel, innerPadding = innerPadding)
-            }
-            composable("history") {
-                HistoryScreen(viewModel = viewModel, innerPadding = innerPadding)
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.Top
+        ) { page ->
+            when (page) {
+                0 -> DashboardScreen(viewModel = viewModel, innerPadding = innerPadding)
+                1 -> HistoryScreen(viewModel = viewModel, innerPadding = innerPadding)
             }
         }
     }
 }
 
 @Composable
-fun BottomNavigation(navController: NavHostController) {
-    val items = listOf("dashboard" to "Home", "history" to "History")
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+fun BottomNavigation(pagerState: PagerState, coroutineScope: kotlinx.coroutines.CoroutineScope) {
+    val items = listOf("Home", "History")
+    val selectedIndex = pagerState.currentPage
 
     NavigationBar(
         containerColor = Color.Transparent,
         contentColor = Color(0xFF1E293B)
     ) {
-        items.forEach { (route, title) ->
+        items.forEachIndexed { index, title ->
             NavigationBarItem(
                 icon = {
                     Icon(
-                        imageVector = if (route == "dashboard") Icons.Rounded.Home else Icons.Rounded.History,
+                        imageVector = if (index == 0) Icons.Rounded.Home else Icons.Rounded.History,
                         contentDescription = title
                     )
                 },
                 label = { Text(title) },
-                selected = currentRoute == route,
+                selected = selectedIndex == index,
                 onClick = {
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(index)
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
