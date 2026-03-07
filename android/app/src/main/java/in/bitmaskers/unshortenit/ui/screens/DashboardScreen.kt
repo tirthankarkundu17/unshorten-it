@@ -12,6 +12,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -97,9 +99,13 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
-            .background(Color(0xFFF9FAFB))
     ) {
-        // Link Setup Banner (only on Android 12+ where manual enable is needed)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Link Setup Banner (only on Android 12+ where manual enable is needed)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val lifecycleOwner = LocalLifecycleOwner.current
             var isLinkHandlingAllowed by remember { mutableStateOf(true) }
@@ -277,7 +283,7 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        }
 
         // AdMob Banner anchored to the bottom before padding
         Box(
