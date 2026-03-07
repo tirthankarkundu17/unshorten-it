@@ -274,12 +274,7 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 // Reuse the History Card logic for consistency
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    shadowElevation = 2.dp
-                ) {
-                    FlatHistoryCard(item = latestItem)
-                }
+                HistoryCard(item = latestItem)
             }
         }
 

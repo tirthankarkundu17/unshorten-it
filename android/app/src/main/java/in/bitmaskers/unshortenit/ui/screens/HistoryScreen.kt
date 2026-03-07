@@ -11,19 +11,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.OpenInNew
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,47 +57,41 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
             .padding(innerPadding)
             .background(Color(0xFFF9FAFB))
     ) {
-        // History Header
-        Column(modifier = Modifier.fillMaxWidth()) {
+        // Redesigned History Header (Local) to match Dashboard theme
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "History",
-                    color = Color(0xFF64748B),
-                    fontSize = 14.sp
-                )
-                
-                if (uiState is UiState.Success && (uiState as UiState.Success).data.isNotEmpty()) {
-                    TextButton(
-                        onClick = { viewModel.clearHistory() },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                        modifier = Modifier.heightIn(min = 24.dp)
-                    ) {
-                        Text(
-                            text = "Clear All",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                } else if (uiState !is UiState.Success) {
-                    Spacer(modifier = Modifier.height(24.dp))
+                Column {
+                    Text(
+                        text = "History",
+                        color = Color(0xFF1E293B),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    val count = if (uiState is UiState.Success) (uiState as UiState.Success).data.size else 0
+                    Text(
+                        text = "$count URLs unshortened",
+                        color = Color(0xFF64748B),
+                        fontSize = 13.sp
+                    )
                 }
             }
-            HorizontalDivider(color = Color(0xFFE2E8F0))
+
         }
 
-        // History List
+        // History Content
         Box(modifier = Modifier.weight(1f)) {
             when (val state = uiState) {
                 is UiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color(0xFF81838A))
+                        CircularProgressIndicator(color = Color(0xFF4F46E5))
                     }
                 }
                 is UiState.Error -> {
@@ -106,12 +105,16 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
                                     imageVector = Icons.Rounded.ContentCopy,
-                                    contentDescription = "Empty",
-                                    modifier = Modifier.size(48.dp),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
                                     tint = Color(0xFFCBD5E1)
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text("No history found", color = Color(0xFF94A3B8), fontSize = 16.sp)
+                                Text(
+                                    text = "No history yet",
+                                    color = Color(0xFF94A3B8),
+                                    fontSize = 16.sp
+                                )
                             }
                         }
                     } else {
@@ -129,11 +132,11 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
                         ) {
                             LazyColumn(
                                 modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(bottom = 24.dp)
+                                contentPadding = PaddingValues(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(state.data, key = { it.id }) { item ->
-                                    FlatHistoryCard(item)
-                                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                                    HistoryCard(item)
                                 }
                             }
                         }
@@ -142,11 +145,12 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
             }
         }
 
-        // AdMob Banner anchored to the bottom
+        // AdMob Banner
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp),
+                .background(Color.White)
+                .padding(bottom = 8.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
             AdmobBanner()
@@ -155,144 +159,199 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
 }
 
 @Composable
-fun FlatHistoryCard(item: HistoryItem) {
+fun HistoryCard(item: HistoryItem) {
     val context = LocalContext.current
     val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(20.dp)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFFE2E8F0), RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Card Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFEDE9FE)), // Light Purple
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.TrendingUp,
+                        contentDescription = null,
+                        tint = Color(0xFF7C3AED),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "Short URL",
-                    fontSize = 12.sp,
-                    color = Color(0xFF475569)
+                    text = "Unshortened URL",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1F2937),
+                    modifier = Modifier.weight(1f)
                 )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Rounded.Schedule,
+                        contentDescription = null,
+                        tint = Color(0xFF9CA3AF),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = getTimeAgo(item.timestamp),
+                        fontSize = 12.sp,
+                        color = Color(0xFF6B7280)
+                    )
+                }
             }
 
-            Text(
-                text = getTimeAgo(item.timestamp),
-                fontSize = 12.sp,
-                color = Color(0xFF64748B)
-            )
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Short URL
+            LabelWithDot(text = "Short URL", color = Color(0xFFF59E0B)) // Orange
+            Spacer(modifier = Modifier.height(8.dp))
+            UrlBox(url = item.originalUrl, backgroundColor = Color(0xFFFFFBEB)) // Light Orange
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Full URL
+            LabelWithDot(text = "Full URL", color = Color(0xFF10B981)) // Green
+            Spacer(modifier = Modifier.height(8.dp))
+            UrlBox(url = item.finalUrl, backgroundColor = Color(0xFFF0FDF4)) // Light Green
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // StatsBadge
+            Surface(
+                color = Color(0xFFEFF6FF), // Light Blue
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF3B82F6))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "${item.responseTime.toInt()}ms",
+                        fontSize = 12.sp,
+                        color = Color(0xFF2563EB),
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Actions
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(
+                    onClick = {
+                        val clip = ClipData.newPlainText("URL", item.finalUrl)
+                        clipboardManager.setPrimaryClip(clip)
+                        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier
+                        .weight(1.5f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                brush = Brush.linearGradient(
+                                    colors = listOf(Color(0xFF8B5CF6), Color(0xFFA78BFA))
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Rounded.ContentCopy, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Copy", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.finalUrl))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF3F4F6),
+                        contentColor = Color(0xFF1F2937)
+                    )
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.OpenInNew, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Open", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = item.originalUrl,
-            color = Color(0xFF0F172A),
-            fontSize = 16.sp
+@Composable
+fun LabelWithDot(text: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(color)
         )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
+        Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = "Full URL",
+            text = text,
             fontSize = 12.sp,
-            color = Color(0xFF64748B)
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF6B7280)
         )
+    }
+}
 
-        Spacer(modifier = Modifier.height(4.dp))
-
+@Composable
+fun UrlBox(url: String, backgroundColor: Color) {
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(12.dp),
+        border = null,
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Text(
-            text = item.finalUrl,
-            color = Color(0xFF0F172A),
-            fontSize = 16.sp,
-            lineHeight = 22.sp
+            text = url,
+            modifier = Modifier.padding(12.dp),
+            fontSize = 14.sp,
+            color = Color(0xFF374151),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Filled.Circle,
-                contentDescription = null,
-                tint = Color(0xFF10B981), // Emerald 500
-                modifier = Modifier.size(8.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "${item.responseTime.toInt()}ms",
-                color = Color(0xFF64748B),
-                fontSize = 13.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            // Copy Button
-            Surface(
-                color = Color(0xFFF1F5F9),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.clickable {
-                    val clip = ClipData.newPlainText("URL", item.finalUrl)
-                    clipboardManager.setPrimaryClip(clip)
-                    Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
-                }
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.ContentCopy,
-                        contentDescription = "Copy",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color(0xFF0F172A)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Copy",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF0F172A)
-                    )
-                }
-            }
-
-            // Open Button
-            Surface(
-                color = Color(0xFFF1F5F9),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.clickable {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.finalUrl))
-                    context.startActivity(intent)
-                }
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.OpenInNew,
-                        contentDescription = "Open",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color(0xFF0F172A)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Open",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF0F172A)
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -307,3 +366,4 @@ fun getTimeAgo(time: Long): String {
         else -> "${diff / 86400_000}d ago"
     }
 }
+
