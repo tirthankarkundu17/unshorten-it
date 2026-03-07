@@ -1,6 +1,8 @@
 package `in`.bitmaskers.unshortenit.ui.screens
 
 import android.content.Intent
+import android.content.pm.verify.domain.DomainVerificationManager
+import android.content.pm.verify.domain.DomainVerificationUserState
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -10,7 +12,18 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -19,8 +32,24 @@ import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.TouchApp
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -37,8 +66,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import android.content.pm.verify.domain.DomainVerificationManager
-import android.content.pm.verify.domain.DomainVerificationUserState
+import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
 
@@ -82,7 +110,7 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                     val userState = manager?.getDomainVerificationUserState(context.packageName)
                     val hasSelectedDomains = userState?.hostToStateMap?.values?.any { state ->
                         state == DomainVerificationUserState.DOMAIN_STATE_SELECTED ||
-                        state == DomainVerificationUserState.DOMAIN_STATE_VERIFIED
+                                state == DomainVerificationUserState.DOMAIN_STATE_VERIFIED
                     } == true
                     (userState?.isLinkHandlingAllowed == true) && hasSelectedDomains
                 } catch (e: Exception) {
@@ -97,10 +125,10 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
-                
+
                 // Initial check
                 isLinkHandlingAllowed = checkLinkHandling()
-                
+
                 onDispose {
                     lifecycleOwner.lifecycle.removeObserver(observer)
                 }
@@ -108,7 +136,14 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
 
             if (!isLinkHandlingAllowed) {
                 val prefs = context.getSharedPreferences("app_prefs", 0)
-                var showBanner by remember { mutableStateOf(!prefs.getBoolean("link_setup_dismissed", false)) }
+                var showBanner by remember {
+                    mutableStateOf(
+                        !prefs.getBoolean(
+                            "link_setup_dismissed",
+                            false
+                        )
+                    )
+                }
 
                 AnimatedVisibility(
                     visible = showBanner,
@@ -215,13 +250,17 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Latest Result Feedback (If there are items)
         if (uiState is UiState.Success && (uiState as UiState.Success).data.isNotEmpty()) {
             val latestItem = (uiState as UiState.Success).data.first()
-            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
                 Text(
                     text = "Most Recent Result",
                     color = Color(0xFF64748B),
@@ -236,6 +275,18 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                     FlatHistoryCard(item = latestItem)
                 }
             }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // AdMob Banner anchored to the bottom before padding
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            AdmobBanner()
         }
     }
 }

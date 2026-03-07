@@ -36,11 +36,20 @@ android {
         // 3. Fallback to default local emulator address
         val localUrl = localProperties.getProperty("BACKEND_URL")
         val envUrl = System.getenv("UNSHORTEN_IT_BACKEND")
-        
         val backendUrl = localUrl ?: envUrl ?: defaultBackendUrl
+
+        val localAdmobAppId = localProperties.getProperty("ADMOB_APP_ID")
+        val envAdmobAppId = System.getenv("ADMOB_APP_ID")
+        val admobAppId = localAdmobAppId ?: envAdmobAppId
+
+        val localAdmobAdUnitId = localProperties.getProperty("ADMOB_AD_UNIT_ID")
+        val envAdmobAdUnitId = System.getenv("ADMOB_AD_UNIT_ID")
+        val admobAdUnitId = localAdmobAdUnitId ?: envAdmobAdUnitId
         
         // Inject this into the generated BuildConfig.java file
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
+        buildConfigField("String", "ADMOB_AD_UNIT_ID", "\"$admobAdUnitId\"")
+        manifestPlaceholders["admobAppId"] = admobAppId
     }
 
     buildTypes {
@@ -92,4 +101,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.play.services.ads)
 }
