@@ -19,10 +19,10 @@ fun AdmobBanner(modifier: Modifier = Modifier) {
             AdView(context).apply {
                 // Determine ad size (you could also use AdSize.BANNER or get the true anchored adaptive size)
                 setAdSize(AdSize.BANNER)
-                
+
                 // Using the banner ad unit ID from BuildConfig
-                adUnitId = in.bitmaskers.unshortenit.BuildConfig.ADMOB_AD_UNIT_ID
-                
+                adUnitId = `in`.bitmaskers.unshortenit.BuildConfig.ADMOB_AD_UNIT_ID
+
                 adListener = object : AdListener() {
                     override fun onAdLoaded() {
                         Log.d("Admob", "AdmobBanner: Ad loaded successfully")
@@ -35,7 +35,7 @@ fun AdmobBanner(modifier: Modifier = Modifier) {
                         )
                     }
                 }
-                
+
                 loadAd(AdRequest.Builder().build())
             }
         }

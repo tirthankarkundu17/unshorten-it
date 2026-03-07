@@ -22,6 +22,7 @@ android {
         // In an Android Emulator, localhost refers to the emulator itself. 
         // 10.0.2.2 is a special alias to your host development machine's loopback interface (localhost).
         val defaultBackendUrl = "http://10.0.2.2:8000"
+        val defaultValue = ""
         
         // Load local.properties if it exists
         val localProperties = Properties()
@@ -40,11 +41,11 @@ android {
 
         val localAdmobAppId = localProperties.getProperty("ADMOB_APP_ID")
         val envAdmobAppId = System.getenv("ADMOB_APP_ID")
-        val admobAppId = localAdmobAppId ?: envAdmobAppId
+        val admobAppId = localAdmobAppId ?: envAdmobAppId ?: defaultValue
 
         val localAdmobAdUnitId = localProperties.getProperty("ADMOB_AD_UNIT_ID")
         val envAdmobAdUnitId = System.getenv("ADMOB_AD_UNIT_ID")
-        val admobAdUnitId = localAdmobAdUnitId ?: envAdmobAdUnitId
+        val admobAdUnitId = localAdmobAdUnitId ?: envAdmobAdUnitId ?: defaultValue
         
         // Inject this into the generated BuildConfig.java file
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
