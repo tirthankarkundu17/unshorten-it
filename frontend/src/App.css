@@ -260,3 +260,68 @@
     gap: 1rem;
   }
 }
+
+/* App Promotion Styles */
+.app-promotion {
+  margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.promotion-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0.9;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.play-store-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  background: #000;
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1.75rem;
+  border-radius: 14px;
+  text-decoration: none;
+  color: white;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.play-store-btn:hover {
+  transform: translateY(-5px) scale(1.02);
+  border-color: var(--accent-color);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 20px var(--accent-glow);
+}
+
+.play-store-btn .btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.play-store-btn .btn-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+.play-store-btn .btn-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  margin-top: 2px;
+}
+
+.play-store-btn svg {
+  color: var(--accent-color);
+  filter: drop-shadow(0 0 5px var(--accent-glow));
+}

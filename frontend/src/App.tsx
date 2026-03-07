@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle } from 'lucide-react';
+import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone } from 'lucide-react';
 import './App.css';
 
 interface UnshortenResponse {
@@ -148,6 +148,21 @@ function App() {
       </main>
 
       <footer className="footer animate-slide-up" style={{ animationDelay: '0.2s' }}>
+        <div className="app-promotion">
+          <p className="promotion-text">Get the Unshorten It experience on your mobile device.</p>
+          <a
+            href="https://play.google.com/store/apps/details?id=in.bitmaskers.unshortenit"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="play-store-btn"
+          >
+            <Smartphone size={20} />
+            <div className="btn-text">
+              <span className="btn-label">GET IT ON</span>
+              <span className="btn-title">Google Play</span>
+            </div>
+          </a>
+        </div>
         <p>Built with FastApi & React. Transparent & Fast.</p>
         <p style={{ marginTop: '0.5rem' }}>
           Made with love by <a href="http://github.com/tirthankarkundu17/" target="_blank" rel="noopener noreferrer" className="author-link">Tirthankar Kundu</a>
