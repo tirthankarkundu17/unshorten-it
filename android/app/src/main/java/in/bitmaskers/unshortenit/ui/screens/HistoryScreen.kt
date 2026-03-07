@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 import `in`.bitmaskers.unshortenit.data.model.HistoryItem
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
@@ -87,56 +88,68 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
         }
 
         // History List
-        when (val state = uiState) {
-            is UiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFF81838A))
-                }
-            }
-            is UiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
-                }
-            }
-            is UiState.Success -> {
-                if (state.data.isEmpty()) {
+        Box(modifier = Modifier.weight(1f)) {
+            when (val state = uiState) {
+                is UiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Rounded.ContentCopy,
-                                contentDescription = "Empty",
-                                modifier = Modifier.size(48.dp),
-                                tint = Color(0xFFCBD5E1)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text("No history found", color = Color(0xFF94A3B8), fontSize = 16.sp)
-                        }
+                        CircularProgressIndicator(color = Color(0xFF81838A))
                     }
-                } else {
-                    PullToRefreshBox(
-                        isRefreshing = isRefreshing,
-                        onRefresh = {
-                            isRefreshing = true
-                            viewModel.loadHistory(isRefresh = true)
-                            coroutineScope.launch {
-                                kotlinx.coroutines.delay(500)
-                                isRefreshing = false
+                }
+                is UiState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+                is UiState.Success -> {
+                    if (state.data.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Rounded.ContentCopy,
+                                    contentDescription = "Empty",
+                                    modifier = Modifier.size(48.dp),
+                                    tint = Color(0xFFCBD5E1)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text("No history found", color = Color(0xFF94A3B8), fontSize = 16.sp)
                             }
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 24.dp)
+                        }
+                    } else {
+                        PullToRefreshBox(
+                            isRefreshing = isRefreshing,
+                            onRefresh = {
+                                isRefreshing = true
+                                viewModel.loadHistory(isRefresh = true)
+                                coroutineScope.launch {
+                                    kotlinx.coroutines.delay(500)
+                                    isRefreshing = false
+                                }
+                            },
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            items(state.data, key = { it.id }) { item ->
-                                FlatHistoryCard(item)
-                                HorizontalDivider(color = Color(0xFFF1F5F9))
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(bottom = 24.dp)
+                            ) {
+                                items(state.data, key = { it.id }) { item ->
+                                    FlatHistoryCard(item)
+                                    HorizontalDivider(color = Color(0xFFF1F5F9))
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+
+        // AdMob Banner anchored to the bottom
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            AdmobBanner()
         }
     }
 }
