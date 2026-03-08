@@ -47,7 +47,10 @@ function App() {
 
       const response = await fetch(`${apiBaseUrl}/api/v1/unshorten`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-App-Platform': 'web'
+        },
         body: JSON.stringify({ url: urlToSubmit }),
       });
 

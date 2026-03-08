@@ -17,14 +17,18 @@ __version__ = os.getenv("APP_VERSION", "local-dev")
 
 from contextlib import asynccontextmanager
 from .services.cache_service import cache_service
+from .services.tracking_service import tracking_service
+from .services.database_service import db_service
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize cache settings now that .env is loaded
+    # Initialize cache and DB settings now that .env is loaded
     cache_service.initialize()
+    db_service.initialize()
     yield
-    # Clean up cache connections on shutdown
+    # Clean up connections on shutdown
     await cache_service.close()
+    await db_service.close()
 
 app = FastAPI(
     title="Unshorten It API",
@@ -90,10 +94,22 @@ async def health_check():
         500: {"model": ErrorResponse, "description": "Internal Server Error"}
     }
 )
-async def unshorten(request: URLRequest):
+async def unshorten(request: URLRequest, raw_request: Request):
     """
     Unshorten a given URL and follow its redirect chain.
     """
+    # Track the request
+    # Extract IP address (handle proxies)
+    client_ip = raw_request.client.host if raw_request.client else "unknown"
+    x_forwarded_for = raw_request.headers.get("X-Forwarded-For")
+    if x_forwarded_for:
+        client_ip = x_forwarded_for.split(",")[0].strip()
+        
+    # Extract platform from header 'X-App-Platform'
+    platform = raw_request.headers.get("X-App-Platform", "android")
+    
+    await tracking_service.track_request(client_ip, platform)
+    
     result = await unshorten_url(str(request.url))
     
     if result.get("error"):
