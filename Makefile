@@ -12,9 +12,10 @@ install-frontend:
 run-frontend:
 	cd frontend && npm run dev
 
-# Alias for run (backend)
-run: run-backend run-frontend
-	echo "Backend and Frontend are running"
+# Run both backend and frontend in parallel
+run:
+	@echo "Starting backend and frontend in parallel..."
+	$(MAKE) -j 2 run-backend run-frontend
 
 
 # Install or sync dependencies using uv
