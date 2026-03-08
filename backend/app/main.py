@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -94,7 +94,7 @@ async def health_check():
         500: {"model": ErrorResponse, "description": "Internal Server Error"}
     }
 )
-async def unshorten(request: URLRequest, raw_request: Request):
+async def unshorten(request: URLRequest, raw_request: Request, background_tasks: BackgroundTasks):
     """
     Unshorten a given URL and follow its redirect chain.
     """
@@ -108,7 +108,7 @@ async def unshorten(request: URLRequest, raw_request: Request):
     # Extract platform from header 'X-App-Platform'
     platform = raw_request.headers.get("X-App-Platform", "android")
     
-    await tracking_service.track_request(client_ip, platform)
+    background_tasks.add_task(tracking_service.track_request, client_ip, platform)
     
     result = await unshorten_url(str(request.url))
     
