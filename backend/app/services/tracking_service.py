@@ -1,7 +1,8 @@
 import logging
 from datetime import datetime, timezone
+import geocoder
+import asyncio
 from .database_service import db_service
-
 logger = logging.getLogger(__name__)
 
 class TrackingService:
@@ -25,11 +26,32 @@ class TrackingService:
                 
                 # 2. Track global unique IPs (as an id in a dedicated collection)
                 # This ensures we have a quick way to count unique visitors.
+                
+                # Fetch geolocation data for the IP address asynchronously
+                location_data = None
+                if ip_address and ip_address not in ("127.0.0.1", "::1", "localhost", "unknown"):
+                    try:
+                        g = await asyncio.to_thread(geocoder.ip, ip_address)
+                        if g.ok:
+                            location_data = {
+                                "city": g.city,
+                                "state": g.state,
+                                "country": g.country,
+                                "lat": g.latlng[0] if g.latlng and len(g.latlng) == 2 else None,
+                                "lng": g.latlng[1] if g.latlng and len(g.latlng) == 2 else None,
+                            }
+                    except Exception as geo_err:
+                        logger.warning(f"Geocoding failed for {ip_address}: {geo_err}")
+
+                update_fields = {"last_seen": datetime.now(timezone.utc)}
+                if location_data:
+                    update_fields["location"] = location_data
+
                 await db_service.db.visitors.update_one(
                     {"_id": ip_address},
                     {
                         "$setOnInsert": {"first_seen": datetime.now(timezone.utc)},
-                        "$set": {"last_seen": datetime.now(timezone.utc)},
+                        "$set": update_fields,
                         "$addToSet": {"platforms": platform} # Track platforms this IP uses
                     },
                     upsert=True
