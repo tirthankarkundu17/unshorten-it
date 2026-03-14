@@ -65,7 +65,10 @@ class DashboardViewModel(
                         originalUrl = url,
                         finalUrl = response.finalUrl,
                         responseTime = response.responseTimeMs,
-                        redirectChain = response.redirectChain
+                        redirectChain = response.redirectChain,
+                        title = response.preview?.title,
+                        description = response.preview?.description,
+                        imageUrl = response.preview?.imageUrl
                     )
                     loadHistory(isRefresh = true)
                 } catch (e: Exception) {

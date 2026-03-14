@@ -11,7 +11,10 @@ interface HistoryRepository {
         originalUrl: String,
         finalUrl: String,
         responseTime: Double,
-        redirectChain: List<String>?
+        redirectChain: List<String>?,
+        title: String? = null,
+        description: String? = null,
+        imageUrl: String? = null
     ): Long
 
     suspend fun updateHistoryTimestamp(id: Long)
