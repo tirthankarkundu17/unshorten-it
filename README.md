@@ -8,9 +8,10 @@
 
 ## Features
 
-- **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Built with [FastAPI](https://fastapi.tiangolo.com/) and [HTTPX](https://www.python-httpx.org/). Features a Hybrid Cache (Redis & DiskCache) for blazing fast responses.
-- **Android App**: Native Kotlin Android App that intercepts sharing intents anywhere in the OS, resolving links securely before you open them. Includes a smart SQLite cache, "clear history" tools, material 3 design, and swipe-to-refresh features. **[Get it on Google Play](https://play.google.com/store/apps/details?id=in.bitmaskers.unshortenit)**
-- **Frontend**: A beautiful, modern, and highly responsive React interface designed with Vanilla CSS (Glassmorphism, dark mode, rich micro-animations).
+- **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Features **Tracker Stripping** (removes utm_* tags automatically) and **Link Preview Extraction** (Open Graph data). Built with [FastAPI](https://fastapi.tiangolo.com/), [HTTPX](https://www.python-httpx.org/), and BeautifulSoup. Features a Hybrid Cache (Redis & DiskCache) for blazing fast responses.
+- **Android App**: Native Kotlin Android App that intercepts sharing intents anywhere in the OS, resolving links securely before you open them. Includes a smart SQLite cache, per-entry history deletion, material 3 design, and swipe-to-refresh features. **[Get it on Google Play](https://play.google.com/store/apps/details?id=in.bitmaskers.unshortenit)**
+- **Frontend**: A beautiful, modern, and highly responsive React interface designed with Vanilla CSS (Glassmorphism, dark mode, rich micro-animations) that displays full destination tracing and rich social previews.
+- **Analytics**: Cross-platform tracking differentiation via custom headers (`X-App-Platform`) logged directly to MongoDB.
 - Includes robust error handling and input validation across the stack.
 - Organized project structure adhering to modern best practices.
 - Managed by [`uv`](https://github.com/astral-sh/uv) and `npm`.
@@ -99,13 +100,19 @@ Once the server is running, you can access the interactive API documentation (Sw
 ```json
 {
   "original_url": "https://bit.ly/3xyz123",
-  "final_url": "https://www.example.com/very/long/destination/path",
+  "final_url": "https://www.example.com/very/long/destination/path?utm_source=twitter",
+  "cleaned_url": "https://www.example.com/very/long/destination/path",
   "redirect_chain": [
     "https://bit.ly/3xyz123",
     "https://example.com/intermediate"
   ],
   "response_time_ms": 154.32,
-  "cached": false
+  "cached": false,
+  "preview": {
+    "title": "Example Destination Title",
+    "description": "This is a description extracted from the Open Graph tags of the final URL.",
+    "image_url": "https://www.example.com/hero-image.jpg"
+  }
 }
 ```
 
