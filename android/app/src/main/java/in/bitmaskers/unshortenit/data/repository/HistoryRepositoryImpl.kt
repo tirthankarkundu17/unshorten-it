@@ -136,4 +136,11 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
             db.delete(TABLE_HISTORY, null, null)
         }
     }
+
+    override suspend fun deleteHistoryItem(id: Long) {
+        withContext(Dispatchers.IO) {
+            val db = writableDatabase
+            db.delete(TABLE_HISTORY, "$COLUMN_ID = ?", arrayOf(id.toString()))
+        }
+    }
 }

@@ -89,4 +89,17 @@ class DashboardViewModel(
             }
         }
     }
+
+    fun deleteHistoryItem(id: Long) {
+        viewModelScope.launch {
+            try {
+                historyRepository.deleteHistoryItem(id)
+                loadHistory(isRefresh = true)
+            } catch (e: Exception) {
+                // If it fails during normal operation, we might not want to overwrite the whole UI state with an error,
+                // but for simplicity mirroring clearHistory here is fine.
+                _uiState.value = UiState.Error("Failed to delete history item")
+            }
+        }
+    }
 }

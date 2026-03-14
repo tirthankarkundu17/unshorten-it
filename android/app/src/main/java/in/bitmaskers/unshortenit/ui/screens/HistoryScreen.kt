@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var isRefreshing by remember { mutableStateOf(false) }
+    var showClearDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState) {
@@ -82,8 +83,41 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
                         fontSize = 13.sp
                     )
                 }
+                
+                if (uiState is UiState.Success && (uiState as UiState.Success).data.isNotEmpty()) {
+                    IconButton(onClick = { showClearDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "Clear History",
+                            tint = Color(0xFFEF4444)
+                        )
+                    }
+                }
             }
 
+        }
+
+        if (showClearDialog) {
+            AlertDialog(
+                onDismissRequest = { showClearDialog = false },
+                title = { Text("Clear History") },
+                text = { Text("Are you sure you want to clear all history? This cannot be undone.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.clearHistory()
+                            showClearDialog = false
+                        }
+                    ) {
+                        Text("Clear", fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showClearDialog = false }) {
+                        Text("Cancel", color = Color(0xFF64748B))
+                    }
+                }
+            )
         }
 
         // History Content
@@ -136,7 +170,9 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 items(state.data, key = { it.id }) { item ->
-                                    HistoryCard(item)
+                                    HistoryCard(item, onDelete = {
+                                        viewModel.deleteHistoryItem(item.id)
+                                    })
                                 }
                             }
                         }
@@ -159,7 +195,7 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
 }
 
 @Composable
-fun HistoryCard(item: HistoryItem) {
+fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
     val context = LocalContext.current
     val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
@@ -229,28 +265,45 @@ fun HistoryCard(item: HistoryItem) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // StatsBadge
-            Surface(
-                color = Color(0xFFEFF6FF), // Light Blue
-                shape = RoundedCornerShape(12.dp)
+            // StatsBadge & Actions Area
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    color = Color(0xFFEFF6FF), // Light Blue
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF3B82F6))
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${item.responseTime.toInt()}ms",
-                        fontSize = 12.sp,
-                        color = Color(0xFF2563EB),
-                        fontWeight = FontWeight.Medium
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF3B82F6))
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "${item.responseTime.toInt()}ms",
+                            fontSize = 12.sp,
+                            color = Color(0xFF2563EB),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                if (onDelete != null) {
+                    IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "Delete Item",
+                            tint = Color(0xFFEF4444),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 
