@@ -265,6 +265,13 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
             Spacer(modifier = Modifier.height(8.dp))
             UrlBox(url = item.finalUrl, backgroundColor = Color(0xFFF0FDF4)) // Light Green
 
+            if (item.cleanedUrl != item.finalUrl) {
+                Spacer(modifier = Modifier.height(16.dp))
+                LabelWithDot(text = "Cleaned URL (Trackers Removed)", color = Color(0xFF3B82F6)) // Blue
+                Spacer(modifier = Modifier.height(8.dp))
+                UrlBox(url = item.cleanedUrl, backgroundColor = Color(0xFFEFF6FF)) // Light Blue
+            }
+
             if (item.title != null || item.description != null || item.imageUrl != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Surface(

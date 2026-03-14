@@ -11,6 +11,7 @@ interface PagePreview {
 interface UnshortenResponse {
   original_url: string;
   final_url: string;
+  cleaned_url: string;
   redirect_chain: string[];
   response_time_ms: number;
   cached: boolean;
@@ -123,6 +124,16 @@ function App() {
                 <ExternalLink size={16} />
               </a>
             </div>
+
+            {result.cleaned_url !== result.final_url && (
+              <div className="result-card cleaned-destination animate-slide-up">
+                <span className="label text-gradient">Cleaned URL (Trackers Removed)</span>
+                <a href={result.cleaned_url} target="_blank" rel="noopener noreferrer" className="url cleaned-url">
+                  {result.cleaned_url}
+                  <ExternalLink size={16} />
+                </a>
+              </div>
+            )}
 
             {result.preview && (result.preview.title || result.preview.description || result.preview.image_url) && (
               <div className="result-card page-preview animate-slide-up">

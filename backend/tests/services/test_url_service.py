@@ -1,7 +1,31 @@
 import pytest
 import respx
 import httpx
-from app.services.url_service import fetch_url_redirects
+from app.services.url_service import fetch_url_redirects, clean_url_trackers
+
+def test_clean_url_trackers():
+    # Test utm params removal
+    url = "https://example.com/page?utm_source=twitter&utm_medium=social&id=123"
+    expected = "https://example.com/page?id=123"
+    assert clean_url_trackers(url) == expected
+    
+    # Test fbclid removal
+    url = "https://example.com/page?fbclid=IwAR123&other=val"
+    expected = "https://example.com/page?other=val"
+    assert clean_url_trackers(url) == expected
+    
+    # Test multiple trackers removal
+    url = "https://example.com/page?gclid=XYZ&utm_campaign=xyz&keep=this"
+    expected = "https://example.com/page?keep=this"
+    assert clean_url_trackers(url) == expected
+    
+    # Test URL with no trackers
+    url = "https://example.com/page?id=123&name=test"
+    assert clean_url_trackers(url) == url
+    
+    # Test URL with no query
+    url = "https://example.com/page"
+    assert clean_url_trackers(url) == url
 
 @pytest.mark.asyncio
 @respx.mock

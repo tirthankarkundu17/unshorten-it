@@ -7,6 +7,7 @@ data class HistoryItem(
     val id: Long,
     val originalUrl: String,
     val finalUrl: String,
+    val cleanedUrl: String,
     val timestamp: Long,
     val responseTime: Double,
     val redirectChain: String,

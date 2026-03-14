@@ -14,8 +14,8 @@ android {
         applicationId = "in.bitmaskers.unshortenit"
         minSdk = 24
         targetSdk = 36
-        versionCode = 4
-        versionName = "3.0"
+        versionCode = 5
+        versionName = "3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         

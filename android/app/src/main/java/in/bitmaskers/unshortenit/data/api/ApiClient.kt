@@ -8,6 +8,12 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
     private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("X-App-Platform", "android")
+                .build()
+            chain.proceed(request)
+        }
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .build()
