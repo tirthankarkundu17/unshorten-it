@@ -65,6 +65,7 @@
                 <data android:host="t.ly" />
                 <data android:host="cutt.ly" />
                 <data android:host="tiny.jio.com" />
+                <data android:host="hdfcbk.io" />
             </intent-filter>
 
             <!-- Intent filter for sharing text to the app -->

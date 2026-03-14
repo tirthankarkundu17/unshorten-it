@@ -115,11 +115,11 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                 try {
                     val manager = context.getSystemService(DomainVerificationManager::class.java)
                     val userState = manager?.getDomainVerificationUserState(context.packageName)
-                    val hasSelectedDomains = userState?.hostToStateMap?.values?.any { state ->
+                    val hasAllSelectedDomains = userState?.hostToStateMap?.values?.all { state ->
                         state == DomainVerificationUserState.DOMAIN_STATE_SELECTED ||
                                 state == DomainVerificationUserState.DOMAIN_STATE_VERIFIED
                     } == true
-                    (userState?.isLinkHandlingAllowed == true) && hasSelectedDomains
+                    (userState?.isLinkHandlingAllowed == true) && hasAllSelectedDomains
                 } catch (e: Exception) {
                     false
                 }
