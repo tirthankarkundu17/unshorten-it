@@ -15,6 +15,7 @@ dependencies = [
     "tenacity>=9.1.4",
     "uvicorn>=0.41.0",
     "geocoder>=1.38.1",
+    "beautifulsoup4>=4.12.3",
 ]
 
 [dependency-groups]
