@@ -66,6 +66,24 @@
                 <data android:host="cutt.ly" />
                 <data android:host="tiny.jio.com" />
                 <data android:host="hdfcbk.io" />
+                <data android:host="fw.to" />
+                <data android:host="amzn.to" />
+                <data android:host="yhoo.it" />
+                <data android:host="trib.al" />
+                <data android:host="n.pr" />
+                <data android:host="qr.net" />
+                <data android:host="w.wiki" />
+                <data android:host="dft.ba" />
+                <data android:host="su.pr" />
+                <data android:host="b.link" />
+                <data android:host="shrtm.nu" />
+                <data android:host="apple.co" />
+                <data android:host="ubr.to" />
+                <data android:host="g.co" />
+                <data android:host="youtu.be" />
+                <data android:host="m.me" />
+                <data android:host="fb.me" />
+                <data android:host="wa.me" />
             </intent-filter>
 
             <!-- Intent filter for sharing text to the app -->
