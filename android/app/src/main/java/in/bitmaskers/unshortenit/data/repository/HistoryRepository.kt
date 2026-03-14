@@ -17,4 +17,6 @@ interface HistoryRepository {
     suspend fun updateHistoryTimestamp(id: Long)
     
     suspend fun clearHistory()
+    
+    suspend fun deleteHistoryItem(id: Long)
 }

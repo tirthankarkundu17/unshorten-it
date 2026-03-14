@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var isRefreshing by remember { mutableStateOf(false) }
+    var showClearDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState) {
@@ -82,8 +83,41 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
                         fontSize = 13.sp
                     )
                 }
+                
+                if (uiState is UiState.Success && (uiState as UiState.Success).data.isNotEmpty()) {
+                    IconButton(onClick = { showClearDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Rounded.Delete,
+                            contentDescription = "Clear History",
+                            tint = Color(0xFFEF4444)
+                        )
+                    }
+                }
             }
 
+        }
+
+        if (showClearDialog) {
+            AlertDialog(
+                onDismissRequest = { showClearDialog = false },
+                title = { Text("Clear History") },
+                text = { Text("Are you sure you want to clear all history? This cannot be undone.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.clearHistory()
+                            showClearDialog = false
+                        }
+                    ) {
+                        Text("Clear", fontWeight = FontWeight.Bold, color = Color(0xFFEF4444))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showClearDialog = false }) {
+                        Text("Cancel", color = Color(0xFF64748B))
+                    }
+                }
+            )
         }
 
         // History Content
