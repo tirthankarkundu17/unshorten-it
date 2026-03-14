@@ -71,6 +71,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
+import `in`.bitmaskers.unshortenit.utils.SharedPrefsKeys
 
 @Composable
 fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
@@ -141,11 +142,11 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
             }
 
             if (!isLinkHandlingAllowed) {
-                val prefs = context.getSharedPreferences("app_prefs", 0)
+                val prefs = context.getSharedPreferences(SharedPrefsKeys.PREFS_NAME, 0)
                 var showBanner by remember {
                     mutableStateOf(
                         !prefs.getBoolean(
-                            "link_setup_dismissed",
+                            SharedPrefsKeys.LINK_SETUP_DISMISSED,
                             false
                         )
                     )
@@ -157,7 +158,7 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                 ) {
                     LinkSetupBanner(
                         onDismiss = {
-                            prefs.edit().putBoolean("link_setup_dismissed", true).apply()
+                            prefs.edit().putBoolean(SharedPrefsKeys.LINK_SETUP_DISMISSED, true).apply()
                             showBanner = false
                         }
                     )
