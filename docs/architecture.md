@@ -13,18 +13,18 @@ graph TD
     Client[Web Browser / User]
     
     subgraph Frontend Subsystem
-        Nginx[Nginx Web Server\n:8080]
-        ReactUI[React SPA\nVite, TypeScript, Vanilla CSS]
+        Nginx[Nginx Web Server :8080]
+        ReactUI[React SPA Vite, TypeScript, Vanilla CSS]
         Nginx -.->|Serves UI & Env Vars| ReactUI
     end
     
     subgraph Backend Subsystem
-        FastAPI[FastAPI Application\n:8000]
-        URLService[URL Unshorten Service\nHTTPX AsyncClient]
+        FastAPI[FastAPI Application :8000]
+        URLService[URL Unshorten Service HTTPX AsyncClient]
         FastAPI --> URLService
     end
     
-    Internet((Internet URL\nDestinations))
+    Internet((Internet URL Destinations))
     
     Client -->|1. Visits App| Nginx
     Client -->|2. Submits URL| FastAPI
@@ -163,14 +163,14 @@ graph TD
         Cloudflared["cloudflared daemon (Bare Metal)"]
         
         subgraph Docker Environment
-            Traefik[Traefik Proxy\nPublishes :80]
+            Traefik[Traefik Proxy Publishes :80]
             Frontend[Nginx Frontend]
             Backend[FastAPI Backend]
         end
     end
 
     Internet -->|HTTPS| CF
-    CF <==>|Secure Tunnel\nNo open ports| Cloudflared
+    CF <==>|Secure Tunnel No open ports| Cloudflared
     Cloudflared -->|HTTP localhost:80| Traefik
     Traefik -->|Host: unshorten.yourdomain.com| Frontend
     Traefik -->|Path: /api| Backend
