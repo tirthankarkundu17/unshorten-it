@@ -4,6 +4,7 @@ import httpx
 import re
 from bs4 import BeautifulSoup
 from typing import Dict, Any, List, Optional, Tuple
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 # Extract timeout to be injected via env variables
@@ -30,6 +31,43 @@ INVALID_PREVIEW_KEYWORDS = [
     "verify you are human",
     "one more step"
 ]
+
+# Known analytics and tracking parameters to be stripped
+TRACKER_PARAMS = {
+    'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+    'utm_cid', 'utm_id', 'utm_name', 'utm_pubreferrer', 'utm_reader', 'utm_swu', 'utm_viz_id',
+    'fbclid', 'gclid', 'msclkid', 'dclid', 'li_fat_id', 'mc_eid', 'rb_clickid',
+    'igshid', 'twclid', 'ttclid', '_ga', '_gl', 's_kwcid', 'ncid', 'mkt_tok',
+    'query_id', '_hsenc', '_hsmi', '__hssc', '__hssrc', '__hstc'
+}
+
+def clean_url_trackers(url: str) -> str:
+    """
+    Strips known analytics and tracking parameters from a URL.
+    """
+    try:
+        parsed = urlparse(url)
+        if not parsed.query:
+            return url
+            
+        query_params = parse_qsl(parsed.query)
+        
+        # Filter out tracking parameters
+        clean_params = [
+            (k, v) for k, v in query_params 
+            if k.lower() not in TRACKER_PARAMS
+        ]
+        
+        if len(clean_params) == len(query_params):
+            return url
+            
+        new_query = urlencode(clean_params)
+        
+        # Reconstruct the URL without tracking parameters
+        return urlunparse(parsed._replace(query=new_query))
+    except Exception:
+        # If parsing fails for any reason, return original URL
+        return url
 
 @retry(
     stop=stop_after_attempt(3),
@@ -129,6 +167,7 @@ async def unshorten_url(url: str) -> Dict[str, Any]:
         return {
             "original_url": url,
             "final_url": cached_result["final_url"],
+            "cleaned_url": clean_url_trackers(cached_result["final_url"]),
             "redirect_chain": cached_result["redirect_chain"],
             "response_time_ms": round((end_time - start_time) * 1000, 2),
             "cached": True,
@@ -148,6 +187,7 @@ async def unshorten_url(url: str) -> Dict[str, Any]:
     result = {
         "original_url": url,
         "final_url": final_url,
+        "cleaned_url": clean_url_trackers(final_url),
         "redirect_chain": redirect_chain,
         "response_time_ms": round((end_time - start_time) * 1000, 2),
         "cached": False,

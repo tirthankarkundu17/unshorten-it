@@ -64,6 +64,7 @@ class DashboardViewModel(
                     historyRepository.insertHistory(
                         originalUrl = url,
                         finalUrl = response.finalUrl,
+                        cleanedUrl = response.cleanedUrl,
                         responseTime = response.responseTimeMs,
                         redirectChain = response.redirectChain,
                         title = response.preview?.title,

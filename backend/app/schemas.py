@@ -20,6 +20,7 @@ class PagePreview(BaseModel):
 class URLResponse(BaseModel):
     original_url: str
     final_url: str
+    cleaned_url: str
     redirect_chain: List[str]
     response_time_ms: float
     cached: bool = False

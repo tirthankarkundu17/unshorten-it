@@ -26,6 +26,7 @@ data class PagePreview(
 data class UnshortenResponse(
     @SerializedName("original_url") val originalUrl: String,
     @SerializedName("final_url") val finalUrl: String,
+    @SerializedName("cleaned_url") val cleanedUrl: String,
     @SerializedName("redirect_chain") val redirectChain: List<String>?,
     @SerializedName("response_time_ms") val responseTimeMs: Double,
     @SerializedName("cached") val cached: Boolean = false,

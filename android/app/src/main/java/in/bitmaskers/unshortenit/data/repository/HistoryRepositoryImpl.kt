@@ -13,12 +13,13 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
 
     companion object {
         private const val DATABASE_NAME = "unshorten_history.db"
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
 
         const val TABLE_HISTORY = "history"
         const val COLUMN_ID = "_id"
         const val COLUMN_ORIGINAL_URL = "original_url"
         const val COLUMN_FINAL_URL = "final_url"
+        const val COLUMN_CLEANED_URL = "cleaned_url"
         const val COLUMN_TIMESTAMP = "timestamp"
         const val COLUMN_RESPONSE_TIME = "response_time"
         const val COLUMN_REDIRECT_CHAIN = "redirect_chain"
@@ -32,6 +33,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
                 + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
                 + COLUMN_ORIGINAL_URL + " TEXT,"
                 + COLUMN_FINAL_URL + " TEXT,"
+                + COLUMN_CLEANED_URL + " TEXT,"
                 + COLUMN_TIMESTAMP + " INTEGER,"
                 + COLUMN_RESPONSE_TIME + " REAL,"
                 + COLUMN_REDIRECT_CHAIN + " TEXT,"
@@ -49,6 +51,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
     override suspend fun insertHistory(
         originalUrl: String,
         finalUrl: String,
+        cleanedUrl: String,
         responseTime: Double,
         redirectChain: List<String>?,
         title: String?,
@@ -58,6 +61,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         val values = ContentValues()
         values.put(COLUMN_ORIGINAL_URL, originalUrl)
         values.put(COLUMN_FINAL_URL, finalUrl)
+        values.put(COLUMN_CLEANED_URL, cleanedUrl)
         values.put(COLUMN_TIMESTAMP, System.currentTimeMillis())
         values.put(COLUMN_RESPONSE_TIME, responseTime)
         values.put(COLUMN_REDIRECT_CHAIN, Gson().toJson(redirectChain ?: emptyList<String>()))
@@ -80,6 +84,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         if (cursor.moveToFirst()) {
             val id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_ID))
             val finalUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FINAL_URL))
+            val cleanedUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLEANED_URL))
             val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
 
             val responseTimeIdx = cursor.getColumnIndex(COLUMN_RESPONSE_TIME)
@@ -101,7 +106,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
             val imgIdx = cursor.getColumnIndex(COLUMN_IMAGE_URL)
             val imageUrl = if (imgIdx != -1 && !cursor.isNull(imgIdx)) cursor.getString(imgIdx) else null
 
-            item = HistoryItem(id, url, finalUrl, timestamp, responseTime, redirectChain, title, description, imageUrl)
+            item = HistoryItem(id, url, finalUrl, cleanedUrl, timestamp, responseTime, redirectChain, title, description, imageUrl)
         }
         cursor.close()
         item
@@ -132,6 +137,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_ID))
                 val originalUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_ORIGINAL_URL))
                 val finalUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_FINAL_URL))
+                val cleanedUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CLEANED_URL))
                 val timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
 
                 val responseTimeIdx = cursor.getColumnIndex(COLUMN_RESPONSE_TIME)
@@ -153,7 +159,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
                 val imgIdx = cursor.getColumnIndex(COLUMN_IMAGE_URL)
                 val imageUrl = if (imgIdx != -1 && !cursor.isNull(imgIdx)) cursor.getString(imgIdx) else null
 
-                historyList.add(HistoryItem(id, originalUrl, finalUrl, timestamp, responseTime, redirectChain, title, description, imageUrl))
+                historyList.add(HistoryItem(id, originalUrl, finalUrl, cleanedUrl, timestamp, responseTime, redirectChain, title, description, imageUrl))
             } while (cursor.moveToNext())
         }
         cursor.close()

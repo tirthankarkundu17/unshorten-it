@@ -10,6 +10,7 @@ interface HistoryRepository {
     suspend fun insertHistory(
         originalUrl: String,
         finalUrl: String,
+        cleanedUrl: String,
         responseTime: Double,
         redirectChain: List<String>?,
         title: String? = null,
