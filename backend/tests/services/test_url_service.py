@@ -12,7 +12,7 @@ async def test_standard_http_redirect():
     respx.get(url).mock(return_value=httpx.Response(301, headers={"Location": final_url}))
     respx.get(final_url).mock(return_value=httpx.Response(200, text="Final Content"))
     
-    chain, resulting_url = await fetch_url_redirects(url, timeout=5.0)
+    chain, resulting_url, preview = await fetch_url_redirects(url, timeout=5.0)
     
     assert resulting_url == final_url
     assert chain == [url]
@@ -35,7 +35,7 @@ async def test_linkedin_interstitial_redirect():
     respx.get(url).mock(return_value=httpx.Response(200, headers={"Content-Type": "text/html"}, text=html_content))
     respx.get(final_url).mock(return_value=httpx.Response(200, text="Final Content"))
     
-    chain, resulting_url = await fetch_url_redirects(url, timeout=5.0)
+    chain, resulting_url, preview = await fetch_url_redirects(url, timeout=5.0)
     
     assert resulting_url == final_url
     assert chain == [url]
@@ -61,7 +61,7 @@ async def test_meta_refresh_redirect():
     respx.get(url).mock(return_value=httpx.Response(200, headers={"Content-Type": "text/html"}, text=html_content))
     respx.get(final_url).mock(return_value=httpx.Response(200, text="Final Content"))
     
-    chain, resulting_url = await fetch_url_redirects(url, timeout=5.0)
+    chain, resulting_url, preview = await fetch_url_redirects(url, timeout=5.0)
     
     assert resulting_url == final_url
     assert chain == [url]
@@ -80,7 +80,7 @@ async def test_max_client_side_redirects():
         # We need to register responses for up to 6 hops
         respx.get(current_url).mock(return_value=httpx.Response(200, headers={"Content-Type": "text/html"}, text=html_content))
         
-    chain, resulting_url = await fetch_url_redirects(url_base, timeout=5.0)
+    chain, resulting_url, preview = await fetch_url_redirects(url_base, timeout=5.0)
     
     # 5 iterations x client side checks, means it follows 5 times.
     # So the resulting_url shouldn't reach loop6. It should be loop5.
@@ -97,7 +97,31 @@ async def test_large_html_body_truncation():
     large_html = "A" * (60 * 1024) # 60KB
     respx.get(url).mock(return_value=httpx.Response(200, headers={"Content-Type": "text/html"}, text=large_html))
     
-    chain, resulting_url = await fetch_url_redirects(url, timeout=5.0)
+    chain, resulting_url, preview = await fetch_url_redirects(url, timeout=5.0)
     
     assert resulting_url == url
     assert chain == []
+
+@pytest.mark.asyncio
+@respx.mock
+async def test_page_preview_extraction():
+    url = "https://target.com/article"
+    html_content = """
+    <html>
+      <head>
+        <title>Article Title</title>
+        <meta name="description" content="Article detail description" />
+        <meta property="og:image" content="https://server.com/img.png" />
+      </head>
+      <body>Content</body>
+    </html>
+    """
+    respx.get(url).mock(return_value=httpx.Response(200, headers={"Content-Type": "text/html"}, text=html_content))
+    
+    chain, resulting_url, preview = await fetch_url_redirects(url, timeout=5.0)
+    
+    assert resulting_url == url
+    assert preview is not None
+    assert preview["title"] == "Article Title"
+    assert preview["description"] == "Article detail description"
+    assert preview["image_url"] == "https://server.com/img.png"

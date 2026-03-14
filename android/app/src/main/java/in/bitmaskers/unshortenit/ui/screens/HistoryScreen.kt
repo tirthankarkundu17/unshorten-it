@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -262,6 +264,49 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
             LabelWithDot(text = "Full URL", color = Color(0xFF10B981)) // Green
             Spacer(modifier = Modifier.height(8.dp))
             UrlBox(url = item.finalUrl, backgroundColor = Color(0xFFF0FDF4)) // Light Green
+
+            if (item.title != null || item.description != null || item.imageUrl != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFFF8FAFC),
+                    shape = RoundedCornerShape(12.dp),
+                    border = null
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        if (item.imageUrl != null) {
+                            AsyncImage(
+                                model = item.imageUrl,
+                                contentDescription = "Page Preview",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                        if (item.title != null) {
+                            Text(
+                                text = item.title,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF1E293B)
+                            )
+                        }
+                        if (item.description != null) {
+                            if (item.title != null) Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = item.description,
+                                fontSize = 12.sp,
+                                color = Color(0xFF64748B),
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 

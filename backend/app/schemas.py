@@ -12,9 +12,15 @@ class ErrorResponse(BaseModel):
 class URLRequest(BaseModel):
     url: HttpUrl
 
+class PagePreview(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+
 class URLResponse(BaseModel):
     original_url: str
     final_url: str
     redirect_chain: List[str]
     response_time_ms: float
     cached: bool = False
+    preview: Optional[PagePreview] = None

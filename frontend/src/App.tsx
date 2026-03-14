@@ -2,12 +2,19 @@ import { useState } from 'react';
 import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone } from 'lucide-react';
 import './App.css';
 
+interface PagePreview {
+  title?: string;
+  description?: string;
+  image_url?: string;
+}
+
 interface UnshortenResponse {
   original_url: string;
   final_url: string;
   redirect_chain: string[];
   response_time_ms: number;
   cached: boolean;
+  preview?: PagePreview;
 }
 
 interface ErrorResponse {
@@ -116,6 +123,22 @@ function App() {
                 <ExternalLink size={16} />
               </a>
             </div>
+
+            {result.preview && (result.preview.title || result.preview.description || result.preview.image_url) && (
+              <div className="result-card page-preview animate-slide-up">
+                <div className="preview-image-container">
+                  <img 
+                    src={result.preview.image_url || '/no-image.png'} 
+                    alt="Page Preview" 
+                    className="preview-image" 
+                  />
+                </div>
+                <div className="preview-content">
+                  {result.preview.title && <h3 className="preview-title">{result.preview.title}</h3>}
+                  {result.preview.description && <p className="preview-description">{result.preview.description}</p>}
+                </div>
+              </div>
+            )}
 
             <div className="result-stats">
               <div className="stat">

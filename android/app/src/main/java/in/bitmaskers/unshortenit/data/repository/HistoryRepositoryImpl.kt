@@ -13,7 +13,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
 
     companion object {
         private const val DATABASE_NAME = "unshorten_history.db"
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 3
 
         const val TABLE_HISTORY = "history"
         const val COLUMN_ID = "_id"
@@ -22,6 +22,9 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         const val COLUMN_TIMESTAMP = "timestamp"
         const val COLUMN_RESPONSE_TIME = "response_time"
         const val COLUMN_REDIRECT_CHAIN = "redirect_chain"
+        const val COLUMN_TITLE = "title"
+        const val COLUMN_DESCRIPTION = "description"
+        const val COLUMN_IMAGE_URL = "image_url"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -31,7 +34,10 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
                 + COLUMN_FINAL_URL + " TEXT,"
                 + COLUMN_TIMESTAMP + " INTEGER,"
                 + COLUMN_RESPONSE_TIME + " REAL,"
-                + COLUMN_REDIRECT_CHAIN + " TEXT" + ")")
+                + COLUMN_REDIRECT_CHAIN + " TEXT,"
+                + COLUMN_TITLE + " TEXT,"
+                + COLUMN_DESCRIPTION + " TEXT,"
+                + COLUMN_IMAGE_URL + " TEXT" + ")")
         db.execSQL(createTable)
     }
 
@@ -44,7 +50,10 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         originalUrl: String,
         finalUrl: String,
         responseTime: Double,
-        redirectChain: List<String>?
+        redirectChain: List<String>?,
+        title: String?,
+        description: String?,
+        imageUrl: String?
     ): Long = withContext(Dispatchers.IO) {
         val values = ContentValues()
         values.put(COLUMN_ORIGINAL_URL, originalUrl)
@@ -52,6 +61,9 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         values.put(COLUMN_TIMESTAMP, System.currentTimeMillis())
         values.put(COLUMN_RESPONSE_TIME, responseTime)
         values.put(COLUMN_REDIRECT_CHAIN, Gson().toJson(redirectChain ?: emptyList<String>()))
+        values.put(COLUMN_TITLE, title)
+        values.put(COLUMN_DESCRIPTION, description)
+        values.put(COLUMN_IMAGE_URL, imageUrl)
 
         val db = writableDatabase
         db.insert(TABLE_HISTORY, null, values)
@@ -80,7 +92,16 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
                 cursor.getString(chainIdx)
             } else "[]"
 
-            item = HistoryItem(id, url, finalUrl, timestamp, responseTime, redirectChain)
+            val titleIdx = cursor.getColumnIndex(COLUMN_TITLE)
+            val title = if (titleIdx != -1 && !cursor.isNull(titleIdx)) cursor.getString(titleIdx) else null
+
+            val descIdx = cursor.getColumnIndex(COLUMN_DESCRIPTION)
+            val description = if (descIdx != -1 && !cursor.isNull(descIdx)) cursor.getString(descIdx) else null
+
+            val imgIdx = cursor.getColumnIndex(COLUMN_IMAGE_URL)
+            val imageUrl = if (imgIdx != -1 && !cursor.isNull(imgIdx)) cursor.getString(imgIdx) else null
+
+            item = HistoryItem(id, url, finalUrl, timestamp, responseTime, redirectChain, title, description, imageUrl)
         }
         cursor.close()
         item
@@ -123,7 +144,16 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
                     cursor.getString(chainIdx)
                 } else "[]"
 
-                historyList.add(HistoryItem(id, originalUrl, finalUrl, timestamp, responseTime, redirectChain))
+                val titleIdx = cursor.getColumnIndex(COLUMN_TITLE)
+                val title = if (titleIdx != -1 && !cursor.isNull(titleIdx)) cursor.getString(titleIdx) else null
+
+                val descIdx = cursor.getColumnIndex(COLUMN_DESCRIPTION)
+                val description = if (descIdx != -1 && !cursor.isNull(descIdx)) cursor.getString(descIdx) else null
+
+                val imgIdx = cursor.getColumnIndex(COLUMN_IMAGE_URL)
+                val imageUrl = if (imgIdx != -1 && !cursor.isNull(imgIdx)) cursor.getString(imgIdx) else null
+
+                historyList.add(HistoryItem(id, originalUrl, finalUrl, timestamp, responseTime, redirectChain, title, description, imageUrl))
             } while (cursor.moveToNext())
         }
         cursor.close()

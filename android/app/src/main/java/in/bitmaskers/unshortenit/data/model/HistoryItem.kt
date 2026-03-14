@@ -9,7 +9,10 @@ data class HistoryItem(
     val finalUrl: String,
     val timestamp: Long,
     val responseTime: Double,
-    val redirectChain: String
+    val redirectChain: String,
+    val title: String? = null,
+    val description: String? = null,
+    val imageUrl: String? = null
 ) {
     fun getChainList(): List<String> {
         if (redirectChain.isEmpty()) return emptyList()
