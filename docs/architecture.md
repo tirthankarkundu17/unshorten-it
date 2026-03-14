@@ -52,10 +52,13 @@ sequenceDiagram
     end
     
     HTTPX->>Remote: Final GET Request
-    Remote-->>HTTPX: 200 OK
+    Remote-->>HTTPX: 200 OK (Downloads HTML)
     HTTPX-->>API: Stream Response + History
-    API-->>Browser: JSON {"redirect_chain": [...], "final_url": "..."}
-    Browser-->>User: Renders redirect path and stats
+    Note right of API: Strips utm_ trackers
+    Note right of API: Extracts Open Graph tags (BeautifulSoup)
+    API->>API: Tracks client IP/Platform in MongoDB
+    API-->>Browser: JSON {"cleaned_url": "...", "preview": {...}}
+    Browser-->>User: Renders redirect path, stats, and rich preview
 ```
 
 ## 3. Technology Stack
@@ -70,6 +73,8 @@ sequenceDiagram
 ### 3.2 Backend
 - **Framework:** FastAPI (Python >= 3.12).
 - **Core Library:** `httpx` (using `AsyncClient`) for asynchronous HTTP requests with redirect following.
+- **HTML Parsing:** `beautifulsoup4` for fast Open Graph meta-tag extraction.
+- **Database:** MongoDB for tracking unique platform requests (`android` vs `web`) and geolocation data via `geocoder`.
 - **Package Manager:** `uv` by Astral (fast, modern Python package installer).
 - **Server:** Uvicorn (ASGI web server).
 
@@ -84,8 +89,10 @@ sequenceDiagram
 ### 4.1 URL Service (`backend/app/services/url_service.py`)
 The heart of the application is the `unshorten_url` function. It operates efficiently by:
 1. Initiating an `httpx.AsyncClient` with `follow_redirects=True`.
-2. Using `.stream("GET", url)`: This is a critical performance optimization. Instead of downloading the potentially large payload of the final destination page, it streams the connection, fetching the response headers (and the full redirect history) while ignoring the body.
+2. Using `.stream("GET", url)`: This is a critical performance optimization. Instead of downloading the potentially large payload of the final destination page right away, it streams the connection, fetching the response headers (and the full redirect history).
 3. Iterating through `response.history` to build the `redirect_chain` list.
+4. Finally, performing a secondary fetch to download the HTML body for extracting `<meta property="og:...">` tags using `BeautifulSoup`.
+5. Stripping away common URL tracking parameters (e.g., `utm_source`, `gclid`) to return a `cleaned_url`.
 
 ### 4.2 Error Handling & Validation
 - **Global Handlers:** The backend defines explicit exception handlers (`@app.exception_handler`) to normalize all errors into a consistent JSON structure (`{"error": {"code": "...", "message": "..."}}`).
@@ -96,6 +103,9 @@ The heart of the application is the `unshorten_url` function. It operates effici
 
 ### `POST /api/v1/unshorten`
 Unshorten a given URL.
+
+**Request Headers (Optional but recommended):**
+- `X-App-Platform`: Can be `web`, `android`, or `unknown`. Used by the backend for traffic analytics.
 
 **Request Body:**
 ```json
@@ -108,12 +118,19 @@ Unshorten a given URL.
 ```json
 {
   "original_url": "https://bit.ly/3xyz123",
-  "final_url": "https://www.example.com/very/long/destination/path",
+  "final_url": "https://www.example.com/very/long/destination/path?utm_source=twitter",
+  "cleaned_url": "https://www.example.com/very/long/destination/path",
   "redirect_chain": [
     "https://bit.ly/3xyz123",
     "https://example.com/intermediate"
   ],
-  "response_time_ms": 154.32
+  "response_time_ms": 154.32,
+  "cached": false,
+  "preview": {
+    "title": "Example Destination Title",
+    "description": "This is a description extracted from the Open Graph tags of the final URL.",
+    "image_url": "https://www.example.com/hero-image.jpg"
+  }
 }
 ```
 
