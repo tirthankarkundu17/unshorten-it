@@ -110,6 +110,8 @@ async def urlhaus_sync_loop():
             
         await asyncio.sleep(SYNC_INTERVAL_SECONDS)
 
+from urllib.parse import urlparse, urlunparse
+
 async def check_url_security(url: str) -> Dict[str, Any]:
     """
     Checks if the URL is flagged as malicious by checking the local MongoDB caching table.
@@ -126,8 +128,15 @@ async def check_url_security(url: str) -> Dict[str, Any]:
         
     collection: AsyncIOMotorCollection = db_service.db["urlhaus_threats"]
     
-    # Exact match check
-    threat = await collection.find_one({"url": url})
+    # Check both the full URL and the URL without query parameters/fragments
+    parsed = urlparse(url)
+    base_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, '', ''))
+    
+    urls_to_check = [url]
+    if base_url != url:
+        urls_to_check.append(base_url)
+    
+    threat = await collection.find_one({"url": {"$in": urls_to_check}})
     
     if threat:
         result = {
@@ -135,9 +144,8 @@ async def check_url_security(url: str) -> Dict[str, Any]:
             "threat_type": threat.get("threat_type", "MALWARE")
         }
     else:
-        # Note: We can expand this later to check domain-level matches if needed
         result = {"is_safe": True, "threat_type": None}
 
-    # Cache the result for 1 hour to heavily reduce MongoDB loads on repetitive urls
+    # Cache the result for 1 hour
     await cache_service.set_json(cache_key, result, expire=3600)
     return result
