@@ -53,21 +53,33 @@ async def sync_urlhaus_feed():
             
             bulk_ops = []
             for row in reader:
-                if len(row) < 6:
+                if len(row) < 9:
                     continue
                     
+                threat_id = row[0]
+                dateadded = row[1]
                 threat_url = row[2]
                 url_status = row[3]
+                last_online = row[4]
                 threat = row[5]
+                tags = row[6]
+                urlhaus_link = row[7]
+                reporter = row[8]
                 
                 # Only keeping active/online threats could save space, 
                 # but we'll store all for better coverage and just update them
                 op = UpdateOne(
                     {"url": threat_url},
                     {"$set": {
+                        "urlhaus_id": threat_id,
+                        "dateadded": dateadded,
                         "url": threat_url,
                         "status": url_status,
-                        "threat_type": threat
+                        "last_online": last_online,
+                        "threat_type": threat,
+                        "tags": tags,
+                        "urlhaus_link": urlhaus_link,
+                        "reporter": reporter
                     }},
                     upsert=True
                 )
