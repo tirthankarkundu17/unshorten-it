@@ -13,7 +13,7 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
 
     companion object {
         private const val DATABASE_NAME = "unshorten_history.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
 
         const val TABLE_HISTORY = "history"
         const val COLUMN_ID = "_id"
@@ -26,6 +26,8 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         const val COLUMN_TITLE = "title"
         const val COLUMN_DESCRIPTION = "description"
         const val COLUMN_IMAGE_URL = "image_url"
+        const val COLUMN_IS_SAFE = "is_safe"
+        const val COLUMN_THREAT_TYPE = "threat_type"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -39,7 +41,9 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
                 + COLUMN_REDIRECT_CHAIN + " TEXT,"
                 + COLUMN_TITLE + " TEXT,"
                 + COLUMN_DESCRIPTION + " TEXT,"
-                + COLUMN_IMAGE_URL + " TEXT" + ")")
+                + COLUMN_IMAGE_URL + " TEXT,"
+                + COLUMN_IS_SAFE + " INTEGER DEFAULT 1,"
+                + COLUMN_THREAT_TYPE + " TEXT" + ")")
         db.execSQL(createTable)
     }
 
@@ -56,7 +60,9 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         redirectChain: List<String>?,
         title: String?,
         description: String?,
-        imageUrl: String?
+        imageUrl: String?,
+        isSafe: Boolean,
+        threatType: String?
     ): Long = withContext(Dispatchers.IO) {
         val values = ContentValues()
         values.put(COLUMN_ORIGINAL_URL, originalUrl)
@@ -68,6 +74,8 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
         values.put(COLUMN_TITLE, title)
         values.put(COLUMN_DESCRIPTION, description)
         values.put(COLUMN_IMAGE_URL, imageUrl)
+        values.put(COLUMN_IS_SAFE, if (isSafe) 1 else 0)
+        values.put(COLUMN_THREAT_TYPE, threatType)
 
         val db = writableDatabase
         db.insert(TABLE_HISTORY, null, values)
@@ -106,7 +114,13 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
             val imgIdx = cursor.getColumnIndex(COLUMN_IMAGE_URL)
             val imageUrl = if (imgIdx != -1 && !cursor.isNull(imgIdx)) cursor.getString(imgIdx) else null
 
-            item = HistoryItem(id, url, finalUrl, cleanedUrl, timestamp, responseTime, redirectChain, title, description, imageUrl)
+            val isSafeIdx = cursor.getColumnIndex(COLUMN_IS_SAFE)
+            val isSafe = if (isSafeIdx != -1 && !cursor.isNull(isSafeIdx)) cursor.getInt(isSafeIdx) > 0 else true
+
+            val threatTypeIdx = cursor.getColumnIndex(COLUMN_THREAT_TYPE)
+            val threatType = if (threatTypeIdx != -1 && !cursor.isNull(threatTypeIdx)) cursor.getString(threatTypeIdx) else null
+
+            item = HistoryItem(id, url, finalUrl, cleanedUrl, timestamp, responseTime, redirectChain, title, description, imageUrl, isSafe, threatType)
         }
         cursor.close()
         item
@@ -159,7 +173,13 @@ class HistoryRepositoryImpl(context: Context) : SQLiteOpenHelper(context, DATABA
                 val imgIdx = cursor.getColumnIndex(COLUMN_IMAGE_URL)
                 val imageUrl = if (imgIdx != -1 && !cursor.isNull(imgIdx)) cursor.getString(imgIdx) else null
 
-                historyList.add(HistoryItem(id, originalUrl, finalUrl, cleanedUrl, timestamp, responseTime, redirectChain, title, description, imageUrl))
+                val isSafeIdx = cursor.getColumnIndex(COLUMN_IS_SAFE)
+                val isSafe = if (isSafeIdx != -1 && !cursor.isNull(isSafeIdx)) cursor.getInt(isSafeIdx) > 0 else true
+
+                val threatTypeIdx = cursor.getColumnIndex(COLUMN_THREAT_TYPE)
+                val threatType = if (threatTypeIdx != -1 && !cursor.isNull(threatTypeIdx)) cursor.getString(threatTypeIdx) else null
+
+                historyList.add(HistoryItem(id, originalUrl, finalUrl, cleanedUrl, timestamp, responseTime, redirectChain, title, description, imageUrl, isSafe, threatType))
             } while (cursor.moveToNext())
         }
         cursor.close()

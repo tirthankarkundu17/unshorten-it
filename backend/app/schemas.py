@@ -17,6 +17,10 @@ class PagePreview(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
 
+class SecurityCheck(BaseModel):
+    is_safe: bool
+    threat_type: Optional[str] = None
+
 class URLResponse(BaseModel):
     original_url: str
     final_url: str
@@ -25,3 +29,4 @@ class URLResponse(BaseModel):
     response_time_ms: float
     cached: bool = False
     preview: Optional[PagePreview] = None
+    security: Optional[SecurityCheck] = None

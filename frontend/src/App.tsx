@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone } from 'lucide-react';
+import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert } from 'lucide-react';
 import './App.css';
 
 interface PagePreview {
   title?: string;
   description?: string;
   image_url?: string;
+}
+
+interface SecurityCheck {
+  is_safe: boolean;
+  threat_type: string | null;
 }
 
 interface UnshortenResponse {
@@ -16,6 +21,7 @@ interface UnshortenResponse {
   response_time_ms: number;
   cached: boolean;
   preview?: PagePreview;
+  security?: SecurityCheck;
 }
 
 interface ErrorResponse {
@@ -116,6 +122,16 @@ function App() {
         {result && (
           <section className="glass-panel result-panel animate-slide-up">
             <h2 className="result-title">Destination Reached</h2>
+
+            {result.security && !result.security.is_safe && (
+              <div className="glass-panel error-panel animate-slide-up" style={{ marginBottom: '1.5rem' }}>
+                <ShieldAlert size={24} color="var(--error-color)" />
+                <div className="error-text">
+                  <strong>Security Warning:</strong> This URL has been flagged as {result.security.threat_type?.replace(/_/g, ' ') || 'a threat'}. 
+                  Proceeding is highly discouraged.
+                </div>
+              </div>
+            )}
 
             <div className="result-card final-destination">
               <span className="label text-gradient">Final URL</span>

@@ -13,7 +13,9 @@ data class HistoryItem(
     val redirectChain: String,
     val title: String? = null,
     val description: String? = null,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+    val isSafe: Boolean = true,
+    val threatType: String? = null
 ) {
     fun getChainList(): List<String> {
         if (redirectChain.isEmpty()) return emptyList()

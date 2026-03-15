@@ -156,6 +156,7 @@ async def fetch_url_redirects(url: str, timeout: float) -> Tuple[List[str], str,
     return redirect_chain, final_url, page_preview
 
 from .cache_service import cache_service
+from .security_service import check_url_security
 
 async def unshorten_url(url: str) -> Dict[str, Any]:
     start_time = time.perf_counter()
@@ -171,7 +172,8 @@ async def unshorten_url(url: str) -> Dict[str, Any]:
             "redirect_chain": cached_result["redirect_chain"],
             "response_time_ms": round((end_time - start_time) * 1000, 2),
             "cached": True,
-            "preview": cached_result.get("preview")
+            "preview": cached_result.get("preview"),
+            "security": cached_result.get("security", {"is_safe": True, "threat_type": None})
         }
     
     try:
@@ -184,6 +186,8 @@ async def unshorten_url(url: str) -> Dict[str, Any]:
 
     end_time = time.perf_counter()
     
+    security_info = await check_url_security(final_url)
+    
     result = {
         "original_url": url,
         "final_url": final_url,
@@ -191,14 +195,16 @@ async def unshorten_url(url: str) -> Dict[str, Any]:
         "redirect_chain": redirect_chain,
         "response_time_ms": round((end_time - start_time) * 1000, 2),
         "cached": False,
-        "preview": preview
+        "preview": preview,
+        "security": security_info
     }
 
     # Save to cache asynchronously without blocking the return
     await cache_service.set_cached_url(url, {
         "final_url": final_url,
         "redirect_chain": redirect_chain,
-        "preview": preview
+        "preview": preview,
+        "security": security_info
     })
 
     return result

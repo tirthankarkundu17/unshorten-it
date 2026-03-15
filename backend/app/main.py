@@ -16,17 +16,29 @@ load_dotenv()
 __version__ = os.getenv("APP_VERSION", "local-dev")
 
 from contextlib import asynccontextmanager
+import asyncio
 from .services.cache_service import cache_service
 from .services.tracking_service import tracking_service
 from .services.database_service import db_service
+from .services.security_service import urlhaus_sync_loop
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize cache and DB settings now that .env is loaded
     cache_service.initialize()
     db_service.initialize()
+    
+    # Start the background sync loop for URLhaus
+    sync_task = asyncio.create_task(urlhaus_sync_loop())
+    
     yield
     # Clean up connections on shutdown
+    sync_task.cancel()
+    try:
+        await sync_task
+    except asyncio.CancelledError:
+        pass
+        
     await cache_service.close()
     await db_service.close()
 

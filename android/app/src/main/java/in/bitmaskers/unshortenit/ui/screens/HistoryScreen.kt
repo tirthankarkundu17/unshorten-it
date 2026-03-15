@@ -265,6 +265,42 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
             Spacer(modifier = Modifier.height(8.dp))
             UrlBox(url = item.finalUrl, backgroundColor = Color(0xFFF0FDF4)) // Light Green
 
+            if (!item.isSafe) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Surface(
+                    color = Color(0xFFFEF2F2), // Light Red
+                    shape = RoundedCornerShape(12.dp),
+                    border = null,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Warning,
+                            contentDescription = "Threat Warning",
+                            tint = Color(0xFFDC2626), // Red
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Security Warning",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF991B1B), // Dark Red
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = "Flagged as ${item.threatType?.replace("_", " ") ?: "a threat"}. Do not visit.",
+                                color = Color(0xFF7F1D1D),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+
             if (item.cleanedUrl != item.finalUrl) {
                 Spacer(modifier = Modifier.height(16.dp))
                 LabelWithDot(text = "Cleaned URL (Trackers Removed)", color = Color(0xFF3B82F6)) // Blue
