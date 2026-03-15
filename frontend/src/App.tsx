@@ -133,7 +133,7 @@ function App() {
               </div>
             )}
 
-            <div className="result-card final-destination">
+            <div className="result-card final-destination animate-slide-up">
               <span className="label text-gradient">Final URL</span>
               <a href={result.final_url} target="_blank" rel="noopener noreferrer" className="url final-url">
                 {result.final_url}
