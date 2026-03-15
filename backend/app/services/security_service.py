@@ -11,6 +11,8 @@ from .database_service import db_service
 from motor.motor_asyncio import AsyncIOMotorCollection
 from pymongo import UpdateOne, IndexModel, ASCENDING
 
+from .cache_service import cache_service
+
 logger = logging.getLogger(__name__)
 
 URLHAUS_ZIP_URL = "https://urlhaus.abuse.ch/downloads/csv/"
@@ -112,8 +114,15 @@ async def check_url_security(url: str) -> Dict[str, Any]:
     """
     Checks if the URL is flagged as malicious by checking the local MongoDB caching table.
     """
+    cache_key = f"threat:{url}"
+    cached_result = await cache_service.get_json(cache_key)
+    if cached_result is not None:
+        return cached_result
+
     if db_service.db is None:
-        return {"is_safe": True, "threat_type": None}
+        result = {"is_safe": True, "threat_type": None}
+        await cache_service.set_json(cache_key, result, expire=3600)
+        return result
         
     collection: AsyncIOMotorCollection = db_service.db["urlhaus_threats"]
     
@@ -121,10 +130,14 @@ async def check_url_security(url: str) -> Dict[str, Any]:
     threat = await collection.find_one({"url": url})
     
     if threat:
-        return {
+        result = {
             "is_safe": False, 
             "threat_type": threat.get("threat_type", "MALWARE")
         }
-    
-    # Note: We can expand this later to check domain-level matches if needed
-    return {"is_safe": True, "threat_type": None}
+    else:
+        # Note: We can expand this later to check domain-level matches if needed
+        result = {"is_safe": True, "threat_type": None}
+
+    # Cache the result for 1 hour to heavily reduce MongoDB loads on repetitive urls
+    await cache_service.set_json(cache_key, result, expire=3600)
+    return result
