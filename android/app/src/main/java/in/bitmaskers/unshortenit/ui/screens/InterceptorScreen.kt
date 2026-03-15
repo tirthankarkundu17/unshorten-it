@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.bitmaskers.unshortenit.ui.components.BadgeContainer
+import `in`.bitmaskers.unshortenit.ui.components.UrlBox
 import `in`.bitmaskers.unshortenit.ui.viewmodel.InterceptorViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
 
@@ -160,18 +162,33 @@ fun InterceptorScreen(
 
                                             result.onSuccess { response ->
                                                 Text(
-                                                    "Safe Destination",
+                                                    "Full URL",
                                                     style = MaterialTheme.typography.labelMedium,
-                                                    color = MaterialTheme.colorScheme.primary
+                                                    color = Color(0xFF10B981) // Matching History Green
                                                 )
-                                                Text(
-                                                    response.finalUrl,
-                                                    style = MaterialTheme.typography.bodyLarge,
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    fontWeight = FontWeight.Medium
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                UrlBox(
+                                                    url = response.finalUrl,
+                                                    backgroundColor = Color(0xFFF0FDF4),
+                                                    label = "Full URL"
                                                 )
 
-                                                Spacer(modifier = Modifier.height(12.dp))
+                                                if (response.cleanedUrl != response.finalUrl) {
+                                                    Spacer(modifier = Modifier.height(12.dp))
+                                                    Text(
+                                                        "Cleaned URL (Trackers Removed)",
+                                                        style = MaterialTheme.typography.labelMedium,
+                                                        color = Color(0xFF3B82F6) // Matching History Blue
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    UrlBox(
+                                                        url = response.cleanedUrl,
+                                                        backgroundColor = Color(0xFFEFF6FF),
+                                                        label = "Cleaned URL"
+                                                    )
+                                                }
+
+                                                Spacer(modifier = Modifier.height(16.dp))
 
                                                 Row(
                                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -193,32 +210,6 @@ fun InterceptorScreen(
                                                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                                                         )
                                                     }
-                                                }
-
-                                                Spacer(modifier = Modifier.height(16.dp))
-
-                                                Button(
-                                                    onClick = {
-                                                        val browserIntent = Intent(
-                                                            Intent.ACTION_VIEW,
-                                                            Uri.parse(response.finalUrl)
-                                                        )
-                                                        browserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                        context.startActivity(
-                                                            Intent.createChooser(browserIntent, "Open with")
-                                                        )
-                                                        onFinish()
-                                                    },
-                                                    modifier = Modifier.align(Alignment.End),
-                                                    shape = RoundedCornerShape(12.dp)
-                                                ) {
-                                                    Icon(
-                                                        Icons.Rounded.OpenInNew,
-                                                        contentDescription = "Open Link",
-                                                        modifier = Modifier.size(16.dp)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(8.dp))
-                                                    Text("Open Link")
                                                 }
                                             }.onFailure { error ->
                                                 Text(

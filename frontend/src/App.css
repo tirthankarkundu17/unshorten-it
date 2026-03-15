@@ -97,7 +97,15 @@
   margin-bottom: 1.5rem;
 }
 
-.final-destination .label {
+.final-destination, .cleaned-destination {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.final-destination .label, .cleaned-destination .label {
   display: block;
   font-size: 0.875rem;
   text-transform: uppercase;
@@ -106,20 +114,20 @@
   margin-bottom: 0.75rem;
 }
 
-.final-url {
-  display: flex;
+.final-url, .cleaned-url {
+  display: flex !important;
   align-items: center;
   gap: 0.75rem;
   font-size: 1.25rem;
-  color: var(--text-primary);
-  text-decoration: none;
+  color: var(--text-primary) !important;
+  text-decoration: none !important;
   word-break: break-all;
   font-weight: 500;
   transition: color 0.2s ease;
 }
 
-.final-url:hover {
-  color: var(--accent-hover);
+.final-url:hover, .cleaned-url:hover {
+  color: var(--accent-hover) !important;
 }
 
 .page-preview {

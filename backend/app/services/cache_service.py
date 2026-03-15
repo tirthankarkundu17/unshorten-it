@@ -91,6 +91,32 @@ class CacheService:
                 logger.info(f"Saved to cache (DiskCache): {url}")
         except Exception as e:
             logger.error(f"Error writing to cache: {e}")
+
+    async def get_json(self, key: str) -> Optional[Dict[str, Any]]:
+        try:
+            if self.redis_client is not None:
+                data = await self.redis_client.get(key)
+                if data:
+                    return json.loads(data)
+            elif self.disk_cache is not None:
+                data = self.disk_cache.get(key)
+                if data:
+                    return json.loads(data) if isinstance(data, str) else data
+        except Exception as e:
+            logger.error(f"Error reading from cache with key {key}: {e}")
+        return None
+
+    async def set_json(self, key: str, data: Dict[str, Any], expire: Optional[int] = None):
+        if expire is None:
+            expire = self.default_cache_expire
+        try:
+            json_data = json.dumps(data)
+            if self.redis_client is not None:
+                await self.redis_client.setex(key, expire, json_data)
+            elif self.disk_cache is not None:
+                self.disk_cache.set(key, json_data, expire=expire)
+        except Exception as e:
+            logger.error(f"Error writing to cache with key {key}: {e}")
             
     async def close(self):
         if self.redis_client:

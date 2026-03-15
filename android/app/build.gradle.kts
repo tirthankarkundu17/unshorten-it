@@ -10,26 +10,35 @@ android {
     namespace = "in.bitmaskers.unshortenit"
     compileSdk = 36
 
+    // Load local.properties if it exists
+    val localProperties = Properties()
+    val localPropertiesFile = project.rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(localPropertiesFile.inputStream())
+    }
+
+    // AdMob Test IDs (Fallbacks)
+    val testAppId = "ca-app-pub-3940256099942544~3347511713"
+    val testAdUnitId = "ca-app-pub-3940256099942544/6300978111"
+
+    // AdMob IDs per build type
+    val admobAppIdDebug = localProperties.getProperty("ADMOB_APP_ID_DEBUG") ?: testAppId
+    val admobAdUnitIdDebug = localProperties.getProperty("ADMOB_AD_UNIT_ID_DEBUG") ?: testAdUnitId
+    val admobAppIdRelease = localProperties.getProperty("ADMOB_APP_ID_RELEASE") ?: testAppId
+    val admobAdUnitIdRelease = localProperties.getProperty("ADMOB_AD_UNIT_ID_RELEASE") ?: testAdUnitId
+
     defaultConfig {
         applicationId = "in.bitmaskers.unshortenit"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "3.1"
+        versionCode = 6
+        versionName = "4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         // In an Android Emulator, localhost refers to the emulator itself. 
         // 10.0.2.2 is a special alias to your host development machine's loopback interface (localhost).
         val defaultBackendUrl = "http://10.0.2.2:8000"
-        val defaultValue = ""
-        
-        // Load local.properties if it exists
-        val localProperties = Properties()
-        val localPropertiesFile = project.rootProject.file("local.properties")
-        if (localPropertiesFile.exists()) {
-            localProperties.load(localPropertiesFile.inputStream())
-        }
         
         // Strategy: 
         // 1. Try to read from local.properties
@@ -39,23 +48,23 @@ android {
         val envUrl = System.getenv("UNSHORTEN_IT_BACKEND")
         val backendUrl = localUrl ?: envUrl ?: defaultBackendUrl
 
-        val localAdmobAppId = localProperties.getProperty("ADMOB_APP_ID")
-        val envAdmobAppId = System.getenv("ADMOB_APP_ID")
-        val admobAppId = localAdmobAppId ?: envAdmobAppId ?: defaultValue
-
-        val localAdmobAdUnitId = localProperties.getProperty("ADMOB_AD_UNIT_ID")
-        val envAdmobAdUnitId = System.getenv("ADMOB_AD_UNIT_ID")
-        val admobAdUnitId = localAdmobAdUnitId ?: envAdmobAdUnitId ?: defaultValue
-        
         // Inject this into the generated BuildConfig.java file
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
-        buildConfigField("String", "ADMOB_AD_UNIT_ID", "\"$admobAdUnitId\"")
-        manifestPlaceholders["admobAppId"] = admobAppId
+
+        // Default to debug/test IDs in defaultConfig
+        buildConfigField("String", "ADMOB_AD_UNIT_ID", "\"$admobAdUnitIdDebug\"")
+        manifestPlaceholders["admobAppId"] = admobAppIdDebug
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ADMOB_AD_UNIT_ID", "\"$admobAdUnitIdDebug\"")
+            manifestPlaceholders["admobAppId"] = admobAppIdDebug
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            buildConfigField("String", "ADMOB_AD_UNIT_ID", "\"$admobAdUnitIdRelease\"")
+            manifestPlaceholders["admobAppId"] = admobAppIdRelease
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

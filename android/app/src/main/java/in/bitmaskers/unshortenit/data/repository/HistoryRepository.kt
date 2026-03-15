@@ -15,7 +15,9 @@ interface HistoryRepository {
         redirectChain: List<String>?,
         title: String? = null,
         description: String? = null,
-        imageUrl: String? = null
+        imageUrl: String? = null,
+        isSafe: Boolean = true,
+        threatType: String? = null
     ): Long
 
     suspend fun updateHistoryTimestamp(id: Long)

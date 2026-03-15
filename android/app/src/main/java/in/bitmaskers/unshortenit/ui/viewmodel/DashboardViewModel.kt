@@ -69,7 +69,9 @@ class DashboardViewModel(
                         redirectChain = response.redirectChain,
                         title = response.preview?.title,
                         description = response.preview?.description,
-                        imageUrl = response.preview?.imageUrl
+                        imageUrl = response.preview?.imageUrl,
+                        isSafe = response.security?.isSafe ?: true,
+                        threatType = response.security?.threatType
                     )
                     loadHistory(isRefresh = true)
                 } catch (e: Exception) {

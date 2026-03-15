@@ -1,8 +1,5 @@
 package `in`.bitmaskers.unshortenit.ui.screens
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -38,6 +35,8 @@ import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 import `in`.bitmaskers.unshortenit.data.model.HistoryItem
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
+import `in`.bitmaskers.unshortenit.ui.components.UrlBox
+import `in`.bitmaskers.unshortenit.ui.components.LabelWithDot
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -199,7 +198,6 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
 @Composable
 fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
     val context = LocalContext.current
-    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -256,20 +254,68 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
             // Short URL
             LabelWithDot(text = "Short URL", color = Color(0xFFF59E0B)) // Orange
             Spacer(modifier = Modifier.height(8.dp))
-            UrlBox(url = item.originalUrl, backgroundColor = Color(0xFFFFFBEB)) // Light Orange
+            UrlBox(
+                url = item.originalUrl,
+                backgroundColor = Color(0xFFFFFBEB),
+                label = "Short URL"
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Full URL
             LabelWithDot(text = "Full URL", color = Color(0xFF10B981)) // Green
             Spacer(modifier = Modifier.height(8.dp))
-            UrlBox(url = item.finalUrl, backgroundColor = Color(0xFFF0FDF4)) // Light Green
+            UrlBox(
+                url = item.finalUrl,
+                backgroundColor = Color(0xFFF0FDF4),
+                label = "Full URL"
+            )
+
+            if (!item.isSafe) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Surface(
+                    color = Color(0xFFFEF2F2), // Light Red
+                    shape = RoundedCornerShape(12.dp),
+                    border = null,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Warning,
+                            contentDescription = "Threat Warning",
+                            tint = Color(0xFFDC2626), // Red
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Security Warning",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF991B1B), // Dark Red
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = "Flagged as ${item.threatType?.replace("_", " ") ?: "a threat"}. Do not visit.",
+                                color = Color(0xFF7F1D1D),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
 
             if (item.cleanedUrl != item.finalUrl) {
                 Spacer(modifier = Modifier.height(16.dp))
                 LabelWithDot(text = "Cleaned URL (Trackers Removed)", color = Color(0xFF3B82F6)) // Blue
                 Spacer(modifier = Modifier.height(8.dp))
-                UrlBox(url = item.cleanedUrl, backgroundColor = Color(0xFFEFF6FF)) // Light Blue
+                UrlBox(
+                    url = item.cleanedUrl,
+                    backgroundColor = Color(0xFFEFF6FF),
+                    label = "Cleaned URL"
+                )
             }
 
             if (item.title != null || item.description != null || item.imageUrl != null) {
@@ -358,105 +404,7 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Actions
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(
-                    onClick = {
-                        val clip = ClipData.newPlainText("URL", item.finalUrl)
-                        clipboardManager.setPrimaryClip(clip)
-                        Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
-                    },
-                    modifier = Modifier
-                        .weight(1.5f)
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent
-                    ),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(Color(0xFF8B5CF6), Color(0xFFA78BFA))
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.ContentCopy, null, Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Copy", fontWeight = FontWeight.Bold)
-                        }
-                    }
-                }
-
-                Button(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.finalUrl))
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF3F4F6),
-                        contentColor = Color(0xFF1F2937)
-                    )
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.OpenInNew, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Open", fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
         }
-    }
-}
-
-@Composable
-fun LabelWithDot(text: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(6.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = text,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF6B7280)
-        )
-    }
-}
-
-@Composable
-fun UrlBox(url: String, backgroundColor: Color) {
-    Surface(
-        color = backgroundColor,
-        shape = RoundedCornerShape(12.dp),
-        border = null,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = url,
-            modifier = Modifier.padding(12.dp),
-            fontSize = 14.sp,
-            color = Color(0xFF374151),
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }
 
