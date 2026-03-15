@@ -35,8 +35,14 @@ class InterceptorViewModel(
                         historyRepository.insertHistory(
                             originalUrl = url,
                             finalUrl = response.finalUrl,
+                            cleanedUrl = response.cleanedUrl,
                             responseTime = response.responseTimeMs,
-                            redirectChain = response.redirectChain
+                            redirectChain = response.redirectChain,
+                            title = response.preview?.title,
+                            description = response.preview?.description,
+                            imageUrl = response.preview?.imageUrl,
+                            isSafe = response.security?.isSafe ?: true,
+                            threatType = response.security?.threatType
                         )
                     } catch (e: Exception) {
                         // ignore DB insertion error if happens
