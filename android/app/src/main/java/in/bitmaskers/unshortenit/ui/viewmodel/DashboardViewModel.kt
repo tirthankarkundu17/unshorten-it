@@ -42,8 +42,13 @@ class DashboardViewModel(
         }
     }
 
-    fun unshortenUrl(url: String) {
-        if (url.isBlank()) return
+    fun unshortenUrl(inputUrl: String) {
+        if (inputUrl.isBlank()) return
+        
+        var url = inputUrl.trim()
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "https://$url"
+        }
         
         viewModelScope.launch {
             _isUnshortening.value = true
