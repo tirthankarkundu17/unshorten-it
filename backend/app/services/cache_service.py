@@ -6,11 +6,6 @@ import redis.asyncio as redis
 from typing import Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-if not logger.handlers:
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(levelname)s:\t  %(message)s'))
-    logger.addHandler(console_handler)
 
 class CacheService:
     def __init__(self):
