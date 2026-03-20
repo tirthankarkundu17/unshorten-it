@@ -3,7 +3,13 @@ from datetime import datetime, timezone
 import geocoder
 import asyncio
 from .database_service import db_service
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter('%(levelname)s:\t  %(message)s'))
+    logger.addHandler(console_handler)
 
 class TrackingService:
     @staticmethod
