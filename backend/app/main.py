@@ -5,6 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import time
 import os
 from pathlib import Path
+from .utils.logging import setup_logging
+
+# Initialize logging before other imports
+setup_logging()
 
 from .schemas import URLRequest, URLResponse, ErrorResponse
 from .services.url_service import unshorten_url

@@ -16,7 +16,8 @@ from .cache_service import cache_service
 logger = logging.getLogger(__name__)
 
 URLHAUS_ZIP_URL = "https://urlhaus.abuse.ch/downloads/csv/"
-SYNC_INTERVAL_SECONDS = 3600 * 24 # Sync once a day, or every hour
+URLHAUS_RECENT_CSV_URL = "https://urlhaus.abuse.ch/downloads/csv_recent/"
+SYNC_INTERVAL_SECONDS = 3600 * 1 # Sync once a day, or every hour
 
 async def sync_urlhaus_feed():
     """Background task to download and sync URLhaus CSV zip to MongoDB"""
@@ -31,20 +32,27 @@ async def sync_urlhaus_feed():
         IndexModel([("url", ASCENDING)], unique=True)
     ])
     
-    logger.info("Starting URLhaus threat feed download...")
+    backfill = os.getenv("URLHAUS_BACKFILL", "false").lower() == "true"
+    url = URLHAUS_ZIP_URL if backfill else URLHAUS_RECENT_CSV_URL
+    
+    logger.info(f"Starting URLhaus {'full backfill' if backfill else 'recent'} threat feed download from {url}...")
     
     async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
         try:
-            response = await client.get(URLHAUS_ZIP_URL)
+            response = await client.get(url)
             response.raise_for_status()
             
-            # Read zipped content
-            zip_data = io.BytesIO(response.content)
-            with zipfile.ZipFile(zip_data, 'r') as zf:
-                # The zip usually contains a single file, usually csv.txt
-                csv_filename = zf.namelist()[0]
-                with zf.open(csv_filename) as f:
-                    content = f.read().decode('utf-8')
+            if backfill:
+                # Read zipped content
+                zip_data = io.BytesIO(response.content)
+                with zipfile.ZipFile(zip_data, 'r') as zf:
+                    # The zip usually contains a single file, usually csv.txt
+                    csv_filename = zf.namelist()[0]
+                    with zf.open(csv_filename) as f:
+                        content = f.read().decode('utf-8')
+            else:
+                # Recent feed is plain CSV
+                content = response.text
                     
             lines = content.splitlines()
             valid_lines = [line for line in lines if not line.startswith('#') and line.strip()]

@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import geocoder
 import asyncio
 from .database_service import db_service
+
 logger = logging.getLogger(__name__)
 
 class TrackingService:
