@@ -113,6 +113,35 @@ class CacheService:
         except Exception as e:
             logger.error(f"Error writing to cache with key {key}: {e}")
             
+    async def increment(self, key: str, expire: int) -> int:
+        """
+        Increment a value in the cache and set expiration if it's new.
+        Returns the new value.
+        """
+        try:
+            if self.redis_client is not None:
+                # Use Redis LUA script or MULTI/EXEC for atomic increment + expire
+                # Simple version: INCR then EXPIRE if result is 1
+                new_val = await self.redis_client.incr(key)
+                if new_val == 1:
+                    await self.redis_client.expire(key, expire)
+                return new_val
+            elif self.disk_cache is not None:
+                # DiskCache is synchronous and atomic
+                new_val = self.disk_cache.incr(key, default=0)
+                # DiskCache doesn't have an easy "set expire only if new" without more logic
+                # So we check if we should reset it (not ideal but works for simple RL)
+                # A better way with DiskCache:
+                # Note: incr in diskcache doesn't set expire.
+                # We can use memoize or just set with expire.
+                if new_val == 1:
+                    self.disk_cache.set(key, 1, expire=expire)
+                    return 1
+                return new_val
+        except Exception as e:
+            logger.error(f"Error incrementing cache key {key}: {e}")
+        return 0
+
     async def close(self):
         if self.redis_client:
             await self.redis_client.aclose()

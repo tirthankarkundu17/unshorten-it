@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Depends
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +25,8 @@ from .services.cache_service import cache_service
 from .services.tracking_service import tracking_service
 from .services.database_service import db_service
 from .services.security_service import urlhaus_sync_loop
+from .services.rate_limiter_service import rate_limiter
+from .utils.network import get_client_ip
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -75,7 +77,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
-        status_code=422,
+        status_code=400,
         content={
             "error": {
                 "code": "VALIDATION_ERROR",
@@ -110,21 +112,23 @@ async def health_check():
         500: {"model": ErrorResponse, "description": "Internal Server Error"}
     }
 )
-async def unshorten(request: URLRequest, raw_request: Request, background_tasks: BackgroundTasks):
+async def unshorten(
+    request: URLRequest, 
+    raw_request: Request, 
+    background_tasks: BackgroundTasks,
+    _ = Depends(rate_limiter.check_rate_limit)
+):
     """
     Unshorten a given URL and follow its redirect chain.
     """
     # Track the request
-    # Extract IP address (handle proxies)
-    client_ip = raw_request.client.host if raw_request.client else "unknown"
-    x_forwarded_for = raw_request.headers.get("X-Forwarded-For")
-    if x_forwarded_for:
-        client_ip = x_forwarded_for.split(",")[0].strip()
+    # Extract IP address securely
+    client_ip = get_client_ip(raw_request)
         
     # Extract platform from header 'X-App-Platform'
     platform = raw_request.headers.get("X-App-Platform", "android")
     
-    background_tasks.add_task(tracking_service.track_request, client_ip, platform)
+    background_tasks.add_task(tracking_service.track_request, client_ip, platform, str(request.url))
     
     result = await unshorten_url(str(request.url))
     
