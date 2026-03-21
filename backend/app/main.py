@@ -124,7 +124,7 @@ async def unshorten(request: URLRequest, raw_request: Request, background_tasks:
     # Extract platform from header 'X-App-Platform'
     platform = raw_request.headers.get("X-App-Platform", "android")
     
-    background_tasks.add_task(tracking_service.track_request, client_ip, platform)
+    background_tasks.add_task(tracking_service.track_request, client_ip, platform, str(request.url))
     
     result = await unshorten_url(str(request.url))
     

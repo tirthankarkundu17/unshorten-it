@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 class TrackingService:
     @staticmethod
-    async def track_request(ip_address: str, platform: str):
+    async def track_request(ip_address: str, platform: str, url: str):
         """
-        Track a unique IP address and increment platform request count in MongoDB.
+        Track a unique IP address, requested URL, and increment platform request count in MongoDB.
         """
         try:
             # Normalize platform name
@@ -21,6 +21,7 @@ class TrackingService:
                 request_log = {
                     "ip": ip_address,
                     "platform": platform,
+                    "url": url,
                     "timestamp": datetime.now(timezone.utc)
                 }
                 await db_service.db.requests.insert_one(request_log)
