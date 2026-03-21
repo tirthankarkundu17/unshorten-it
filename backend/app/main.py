@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Depends
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,6 +25,7 @@ from .services.cache_service import cache_service
 from .services.tracking_service import tracking_service
 from .services.database_service import db_service
 from .services.security_service import urlhaus_sync_loop
+from .services.rate_limiter_service import rate_limiter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -75,7 +76,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
-        status_code=422,
+        status_code=400,
         content={
             "error": {
                 "code": "VALIDATION_ERROR",
@@ -110,7 +111,12 @@ async def health_check():
         500: {"model": ErrorResponse, "description": "Internal Server Error"}
     }
 )
-async def unshorten(request: URLRequest, raw_request: Request, background_tasks: BackgroundTasks):
+async def unshorten(
+    request: URLRequest, 
+    raw_request: Request, 
+    background_tasks: BackgroundTasks,
+    _ = Depends(rate_limiter.check_rate_limit)
+):
     """
     Unshorten a given URL and follow its redirect chain.
     """
