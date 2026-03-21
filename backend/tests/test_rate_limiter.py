@@ -14,7 +14,15 @@ async def test_rate_limiting_allowed(async_client: AsyncClient):
         
         # We need to mock the unshorten_url service call as well to avoid real network requests
         with patch("app.main.unshorten_url", new_callable=AsyncMock) as mock_unshorten:
-            mock_unshorten.return_value = {"final_url": "https://example.com", "redirect_chain": []}
+            mock_unshorten.return_value = {
+                "original_url": "https://google.com",
+                "final_url": "https://example.com", 
+                "cleaned_url": "https://example.com",
+                "redirect_chain": [],
+                "response_time_ms": 12.34,
+                "cached": False,
+                "security": {"is_safe": True, "threat_type": None}
+            }
             
             response = await async_client.post("/api/v1/unshorten", json={"url": "https://google.com"})
             

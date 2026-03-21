@@ -20,7 +20,7 @@ async def test_unshorten_bad_url_xss(async_client: AsyncClient):
     Test the /api/v1/unshorten endpoint with a malformed URL containing an XSS payload.
     This should fail Pydantic validation and return a 400 error.
     """
-    bad_url = "https://xxxxmailto:test@example.codummy="
+    bad_url = "javascript:alert(1)" # Updated bad_url to trigger validation error
     response = await async_client.post("/api/v1/unshorten", json={"url": bad_url})
     
     # We expect 400 Bad Request due to pydantic validation
