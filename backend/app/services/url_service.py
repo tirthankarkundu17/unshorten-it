@@ -4,8 +4,11 @@ import httpx
 import re
 from bs4 import BeautifulSoup
 from typing import Dict, Any, List, Optional, Tuple
-from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, urljoin
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from .cache_service import cache_service
+from .security_service import check_url_security
+from ..utils.network import is_safe_target_url
 
 # Extract timeout to be injected via env variables
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "15.0"))
@@ -80,19 +83,31 @@ async def fetch_url_redirects(url: str, timeout: float) -> Tuple[List[str], str,
     final_url = url
     page_preview: Optional[Dict[str, Any]] = None
     
-    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True, headers=DEFAULT_HEADERS) as client:
-        # Allow up to 5 client-side redirects (e.g. meta refresh or interstitials like LinkedIn)
-        for _ in range(5):
+    async with httpx.AsyncClient(
+        # Use granular timeouts: quick connect, reasonable read
+        timeout=httpx.Timeout(timeout, connect=5.0, read=timeout),
+        follow_redirects=False, # We handle redirects manually for SSRF protection
+        headers=DEFAULT_HEADERS
+    ) as client:
+        # Allow up to 10 redirects total (client and server side)
+        for _ in range(10):
+            if not await is_safe_target_url(final_url):
+                raise httpx.RequestError("Blocked request to unsafe/private IP (SSRF Protection)")
+                
             page_preview = None
             # We use stream("GET") so that we don't download the body of the final URL
             # if it happens to be a large file, but we still trigger all redirects
             # that might require a GET request.
             async with client.stream("GET", final_url) as response:
-                # response.history contains the intermediate responses
-                for resp in response.history:
-                    redirect_chain.append(str(resp.url))
-                
                 current_url = str(response.url)
+                
+                # Manual server-side redirect handling
+                if response.status_code in (301, 302, 303, 307, 308):
+                    next_url = response.headers.get("Location")
+                    if next_url:
+                        redirect_chain.append(current_url)
+                        final_url = urljoin(current_url, next_url)
+                        continue # Continue the loop to follow the redirect
                 
                 # Check for client-side redirects or interstitials if it's text/html
                 content_type = response.headers.get("content-type", "")
@@ -154,9 +169,6 @@ async def fetch_url_redirects(url: str, timeout: float) -> Tuple[List[str], str,
                 break
 
     return redirect_chain, final_url, page_preview
-
-from .cache_service import cache_service
-from .security_service import check_url_security
 
 async def unshorten_url(url: str) -> Dict[str, Any]:
     start_time = time.perf_counter()

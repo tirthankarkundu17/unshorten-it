@@ -2,6 +2,7 @@ import os
 import logging
 from fastapi import Request, HTTPException
 from .cache_service import cache_service
+from ..utils.network import get_client_ip
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +23,8 @@ class RateLimiterService:
         if not self.enabled:
             return
 
-        # Extract client IP
-        client_ip = request.client.host if request.client else "unknown"
-        x_forwarded_for = request.headers.get("X-Forwarded-For")
-        if x_forwarded_for:
-            client_ip = x_forwarded_for.split(",")[0].strip()
+        # Extract client IP securely
+        client_ip = get_client_ip(request)
 
         key = f"rl:{client_ip}"
         

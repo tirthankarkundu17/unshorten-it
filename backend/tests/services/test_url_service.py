@@ -96,20 +96,20 @@ async def test_max_client_side_redirects():
     # Should stop after 5 client-side hops
     url_base = "https://short.com/loop"
     
-    for i in range(6):
+    for i in range(11):
         current_url = f"{url_base}{i}" if i > 0 else url_base
         next_url = f"{url_base}{i+1}"
         html_content = f"""<meta http-equiv="refresh" content="0; url={next_url}" />"""
         
-        # We need to register responses for up to 6 hops
+        # We need to register responses for up to 11 hops
         respx.get(current_url).mock(return_value=httpx.Response(200, headers={"Content-Type": "text/html"}, text=html_content))
         
     chain, resulting_url, preview = await fetch_url_redirects(url_base, timeout=5.0)
     
-    # 5 iterations x client side checks, means it follows 5 times.
-    # So the resulting_url shouldn't reach loop6. It should be loop5.
-    assert "loop5" in resulting_url
-    assert len(chain) == 5
+    # 10 iterations x client side checks, means it follows 10 times.
+    # So the resulting_url shouldn't reach loop11. It should be loop10.
+    assert "loop10" in resulting_url
+    assert len(chain) == 10
 
 @pytest.mark.asyncio
 @respx.mock

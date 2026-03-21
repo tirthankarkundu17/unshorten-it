@@ -26,6 +26,7 @@ from .services.tracking_service import tracking_service
 from .services.database_service import db_service
 from .services.security_service import urlhaus_sync_loop
 from .services.rate_limiter_service import rate_limiter
+from .utils.network import get_client_ip
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -121,11 +122,8 @@ async def unshorten(
     Unshorten a given URL and follow its redirect chain.
     """
     # Track the request
-    # Extract IP address (handle proxies)
-    client_ip = raw_request.client.host if raw_request.client else "unknown"
-    x_forwarded_for = raw_request.headers.get("X-Forwarded-For")
-    if x_forwarded_for:
-        client_ip = x_forwarded_for.split(",")[0].strip()
+    # Extract IP address securely
+    client_ip = get_client_ip(raw_request)
         
     # Extract platform from header 'X-App-Platform'
     platform = raw_request.headers.get("X-App-Platform", "android")

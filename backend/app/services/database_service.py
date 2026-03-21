@@ -17,7 +17,7 @@ class DatabaseService:
         try:
             self.client = AsyncIOMotorClient(mongo_uri)
             self.db = self.client[mongo_db_name]
-            logger.info(f"Initialized MongoDB at {mongo_uri}, database: {mongo_db_name}")
+            logger.info(f"Initialized MongoDB at")
         except Exception as e:
             logger.error(f"Failed to initialize MongoDB: {e}")
 
