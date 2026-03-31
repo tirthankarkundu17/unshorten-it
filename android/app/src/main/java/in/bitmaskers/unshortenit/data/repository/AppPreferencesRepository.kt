@@ -4,12 +4,13 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
+import `in`.bitmaskers.unshortenit.utils.SharedPrefsKeys.APP_PREFS_NAME
 
 class AppPreferencesRepository(
     context: Context,
     private val timeProvider: () -> Long = { System.currentTimeMillis() }
 ) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
 
     companion object {
         private const val KEY_USAGE_COUNT = "USAGE_COUNT"
