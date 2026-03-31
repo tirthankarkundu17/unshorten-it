@@ -26,12 +26,34 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import kotlinx.coroutines.launch
 
+import android.app.Activity
+import androidx.compose.ui.platform.LocalContext
+import com.google.android.play.core.review.ReviewManagerFactory
+
 @Composable
 fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
     
+    val context = LocalContext.current
+    val activity = context as? Activity
+
+    LaunchedEffect(Unit) {
+        viewModel.showReviewEvent.collect { shouldShow ->
+            if (shouldShow && activity != null) {
+                val reviewManager = ReviewManagerFactory.create(activity)
+                val request = reviewManager.requestReviewFlow()
+                request.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val reviewInfo = task.result
+                        reviewManager.launchReviewFlow(activity, reviewInfo)
+                    }
+                }
+            }
+        }
+    }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -43,7 +65,6 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
-    
 
     Scaffold(
         topBar = {

@@ -31,7 +31,8 @@ class MainActivity : ComponentActivity() {
 
         val historyRepository = HistoryRepositoryImpl(this)
         val unshortenRepository = UnshortenRepository()
-        val viewModelFactory = AppViewModelFactory(historyRepository, unshortenRepository)
+        val appPreferencesRepository = `in`.bitmaskers.unshortenit.data.repository.AppPreferencesRepository(this)
+        val viewModelFactory = AppViewModelFactory(appPreferencesRepository, historyRepository, unshortenRepository)
 
         setContent {
             MyApplicationTheme {

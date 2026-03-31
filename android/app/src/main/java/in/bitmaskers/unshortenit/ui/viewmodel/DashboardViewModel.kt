@@ -8,12 +8,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+import `in`.bitmaskers.unshortenit.data.repository.AppPreferencesRepository
 import `in`.bitmaskers.unshortenit.data.repository.UnshortenRepository
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 class DashboardViewModel(
+    private val appPreferencesRepository: AppPreferencesRepository,
     private val historyRepository: HistoryRepository,
     private val unshortenRepository: UnshortenRepository
 ) : ViewModel() {
+
+    private val _showReviewEvent = MutableSharedFlow<Boolean>()
+    val showReviewEvent = _showReviewEvent.asSharedFlow()
 
     private val _isUnshortening = MutableStateFlow(false)
     val isUnshortening: StateFlow<Boolean> = _isUnshortening
@@ -78,6 +85,10 @@ class DashboardViewModel(
                         isSafe = response.security?.isSafe ?: true,
                         threatType = response.security?.threatType
                     )
+                    appPreferencesRepository.incrementUsageCount()
+                    if (appPreferencesRepository.shouldShowRatePopup()) {
+                        _showReviewEvent.emit(true)
+                    }
                     loadHistory(isRefresh = true)
                 } catch (e: Exception) {
                     _unshortenError.value = "Failed to save to history"
