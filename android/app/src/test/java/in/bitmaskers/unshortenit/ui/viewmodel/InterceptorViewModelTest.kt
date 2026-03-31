@@ -29,11 +29,12 @@ class InterceptorViewModelTest {
         val fakeResponse = UnshortenResponse(
             originalUrl = "http://short.link",
             finalUrl = "http://destination.link",
+            cleanedUrl = "http://destination.link",
             redirectChain = listOf("http://short.link", "http://destination.link"),
             responseTimeMs = 250.0
         )
         coEvery { unshortenRepository.unshortenUrl("http://short.link") } returns Result.success(fakeResponse)
-        coEvery { historyRepository.insertHistory(any(), any(), any(), any()) } returns 1L
+        coEvery { historyRepository.insertHistory(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns 1L
 
         val viewModel = InterceptorViewModel(unshortenRepository, historyRepository)
 

@@ -12,12 +12,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+import `in`.bitmaskers.unshortenit.data.repository.AppPreferencesRepository
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val appPreferencesRepository: AppPreferencesRepository = mockk(relaxed = true)
     private val historyRepository: HistoryRepository = mockk()
     private val unshortenRepository: `in`.bitmaskers.unshortenit.data.repository.UnshortenRepository = mockk()
 
@@ -25,12 +28,12 @@ class DashboardViewModelTest {
     fun `loadHistory success updates UI state to Success with data`() = runTest {
         // Arrange
         val mockItems = listOf(
-            HistoryItem(1L, "http://short.url", "http://long.url", 12345L, 100.0, "[]")
+            HistoryItem(1L, "http://short.url", "http://long.url", "http://long.url", 12345L, 100.0, "[]")
         )
         coEvery { historyRepository.getAllHistory() } returns mockItems
 
         // Act
-        val viewModel = DashboardViewModel(historyRepository, unshortenRepository)
+        val viewModel = DashboardViewModel(appPreferencesRepository, historyRepository, unshortenRepository)
 
         // Assert
         val state = viewModel.uiState.value
@@ -45,7 +48,7 @@ class DashboardViewModelTest {
         coEvery { historyRepository.getAllHistory() } throws RuntimeException(errorMessage)
 
         // Act
-        val viewModel = DashboardViewModel(historyRepository, unshortenRepository)
+        val viewModel = DashboardViewModel(appPreferencesRepository, historyRepository, unshortenRepository)
 
         // Assert
         val state = viewModel.uiState.value
@@ -57,10 +60,10 @@ class DashboardViewModelTest {
     fun `loadHistory refresh flag skips Loading state update`() = runTest {
         // Arrange
         val mockItems = listOf(
-            HistoryItem(1L, "http://another.url", "http://long.val", 123456L, 120.0, "[]")
+            HistoryItem(1L, "http://another.url", "http://long.val", "http://long.val", 123456L, 120.0, "[]")
         )
         coEvery { historyRepository.getAllHistory() } returns mockItems
-        val viewModel = DashboardViewModel(historyRepository, unshortenRepository)
+        val viewModel = DashboardViewModel(appPreferencesRepository, historyRepository, unshortenRepository)
         // Ensure state is fully resolved by Unconfined dispatcher from init
 
         coEvery { historyRepository.getAllHistory() } returns emptyList()

@@ -88,6 +88,7 @@ class DashboardViewModel(
                     appPreferencesRepository.incrementUsageCount()
                     if (appPreferencesRepository.shouldShowRatePopup()) {
                         _showReviewEvent.emit(true)
+                        appPreferencesRepository.markRatingPromptShown()
                     }
                     loadHistory(isRefresh = true)
                 } catch (e: Exception) {
