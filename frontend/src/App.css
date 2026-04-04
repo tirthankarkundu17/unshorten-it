@@ -400,3 +400,99 @@
   color: var(--accent-color);
   filter: drop-shadow(0 0 5px var(--accent-glow));
 }
+
+/* History Feature Enhancements */
+.history-card {
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.history-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.5);
+}
+
+.history-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #6366f1, #a855f7);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.history-card:hover::before {
+  opacity: 1;
+}
+
+.history-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 1.05rem;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.history-subheader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.history-icon {
+  flex-shrink: 0;
+  color: var(--accent-color);
+  opacity: 0.8;
+  margin-top: 0.15rem;
+}
+
+.clear-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.clear-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  transform: scale(1.02);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  font-weight: 600;
+}
