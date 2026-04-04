@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History } from 'lucide-react';
 import './App.css';
 
 interface PagePreview {
@@ -24,6 +24,10 @@ interface UnshortenResponse {
   security?: SecurityCheck;
 }
 
+interface HistoryItem extends UnshortenResponse {
+  timestamp: number;
+}
+
 interface ErrorResponse {
   error: {
     message: string;
@@ -35,6 +39,20 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<UnshortenResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('unshorten_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('unshorten_history', JSON.stringify(history));
+  }, [history]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +93,11 @@ function App() {
 
       const data = (await response.json()) as UnshortenResponse;
       setResult(data);
+      
+      setHistory(prev => {
+        const newHistory = [{ ...data, timestamp: Date.now() }, ...prev.filter(h => h.original_url !== data.original_url)];
+        return newHistory.slice(0, 50); // Keep last 50
+      });
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
     } finally {
@@ -82,121 +105,170 @@ function App() {
     }
   };
 
+  const loadFromHistory = (item: HistoryItem) => {
+    setUrl(item.original_url);
+    setResult({ ...item });
+    setError(null);
+    setShowHistory(false);
+  };
+
   return (
     <div className="app-container">
-      <header className="hero animate-slide-up">
+      <header className="hero animate-slide-up" style={{ position: 'relative' }}>
         <h1 className="title text-gradient">Unshorten It</h1>
         <p className="subtitle">Melt away the mystery. Discover exactly where any shortened link is taking you before you click.</p>
+        
+        {history.length > 0 && (
+           <button 
+             className="glass-input" 
+             style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.5rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}
+             onClick={() => setShowHistory(!showHistory)}
+           >
+             <History size={18} />
+             <span>History</span>
+           </button>
+        )}
       </header>
 
       <main className="main-content">
-        <form className="glass-panel search-form animate-slide-up" onSubmit={handleSubmit} style={{ animationDelay: '0.1s' }}>
-          <div className="input-wrapper">
-            <LinkIcon className="input-icon" size={20} />
-            <input
-              type="text"
-              className="glass-input"
-              placeholder="Paste a shortened link here (e.g. bit.ly/example)..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
-          <button type="submit" className="btn-primary" disabled={isLoading || !url.trim()}>
-            {isLoading ? <span className="spinner"></span> : (
-              <>
-                <Search size={20} />
-                <span>Unshorten</span>
-              </>
-            )}
-          </button>
-        </form>
-
-        {error && (
-          <div className="glass-panel error-panel animate-slide-up">
-            <AlertCircle size={24} color="var(--error-color)" />
-            <p className="error-text">{error}</p>
-          </div>
-        )}
-
-        {result && (
-          <section className="glass-panel result-panel animate-slide-up">
-            <h2 className="result-title">Destination Reached</h2>
-
-            {result.security && !result.security.is_safe && (
-              <div className="glass-panel error-panel animate-slide-up" style={{ marginBottom: '1.5rem' }}>
-                <ShieldAlert size={24} color="var(--error-color)" />
-                <div className="error-text">
-                  <strong>Security Warning:</strong> This URL has been flagged as {result.security.threat_type?.replace(/_/g, ' ') || 'a threat'}. 
-                  Proceeding is highly discouraged.
-                </div>
-              </div>
-            )}
-
-            <div className="result-card final-destination animate-slide-up">
-              <span className="label text-gradient">Final URL</span>
-              <a href={result.final_url} target="_blank" rel="noopener noreferrer" className="url final-url">
-                {result.final_url}
-                <ExternalLink size={16} />
-              </a>
+        {showHistory ? (
+          <section className="glass-panel animate-slide-up" style={{ textAlign: 'left' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h2 className="result-title" style={{ margin: 0 }}>Recent History</h2>
+              <button 
+                 onClick={() => { setHistory([]); setShowHistory(false); }} 
+                 style={{ background: 'transparent', color: '#ff4d4f', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Clear All
+              </button>
             </div>
-
-            {result.cleaned_url !== result.final_url && (
-              <div className="result-card cleaned-destination animate-slide-up">
-                <span className="label text-gradient">Cleaned URL (Trackers Removed)</span>
-                <a href={result.cleaned_url} target="_blank" rel="noopener noreferrer" className="url cleaned-url">
-                  {result.cleaned_url}
-                  <ExternalLink size={16} />
-                </a>
-              </div>
+            {history.length === 0 ? (
+              <p>No history available.</p>
+            ) : (
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {history.map((item, idx) => (
+                  <li key={idx} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', cursor: 'pointer' }} onClick={() => loadFromHistory(item)}>
+                    <div style={{ wordBreak: 'break-all', fontWeight: 500, color: '#e2e8f0', marginBottom: '0.25rem' }}>{item.original_url}</div>
+                    <div style={{ wordBreak: 'break-all', fontSize: '0.85rem', color: '#94a3b8' }}>&rarr; {item.final_url}</div>
+                  </li>
+                ))}
+              </ul>
             )}
-
-            {result.preview && (result.preview.title || result.preview.description || result.preview.image_url) && (
-              <div className="result-card page-preview animate-slide-up">
-                <div className="preview-image-container">
-                  <img 
-                    src={result.preview.image_url || '/no-image.png'} 
-                    alt="Page Preview" 
-                    className="preview-image" 
-                  />
-                </div>
-                <div className="preview-content">
-                  {result.preview.title && <h3 className="preview-title">{result.preview.title}</h3>}
-                  {result.preview.description && <p className="preview-description">{result.preview.description}</p>}
-                </div>
-              </div>
-            )}
-
-            <div className="result-stats">
-              <div className="stat">
-                <Clock size={16} className="stat-icon" />
-                <span>Traced in <strong>{result.response_time_ms}ms</strong></span>
-                {result.cached && (
-                  <span style={{ marginLeft: '8px', fontSize: '0.75rem', padding: '2px 6px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px' }}>
-                    Cached
-                  </span>
-                )}
-              </div>
-              <div className="stat">
-                <LinkIcon size={16} className="stat-icon" />
-                <span><strong>{result.redirect_chain.length - 1}</strong> Hops</span>
-              </div>
+            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+              <button className="btn-primary" onClick={() => setShowHistory(false)} style={{ padding: '0.5rem 1rem' }}>Back</button>
             </div>
-
-            {result.redirect_chain.length > 1 && (
-              <div className="redirect-chain">
-                <h3 className="chain-title">Redirect Journey</h3>
-                <ol className="chain-list">
-                  {result.redirect_chain.map((link, index) => (
-                    <li key={index} className="chain-item">
-                      <div className="hop-node"></div>
-                      <span className="hop-url">{link}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
           </section>
+        ) : (
+          <>
+            <form className="glass-panel search-form animate-slide-up" onSubmit={handleSubmit} style={{ animationDelay: '0.1s' }}>
+              <div className="input-wrapper">
+                <LinkIcon className="input-icon" size={20} />
+                <input
+                  type="text"
+                  className="glass-input"
+                  placeholder="Paste a shortened link here (e.g. bit.ly/example)..."
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <button type="submit" className="btn-primary" disabled={isLoading || !url.trim()}>
+                {isLoading ? <span className="spinner"></span> : (
+                  <>
+                    <Search size={20} />
+                    <span>Unshorten</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {error && (
+              <div className="glass-panel error-panel animate-slide-up">
+                <AlertCircle size={24} color="var(--error-color)" />
+                <p className="error-text">{error}</p>
+              </div>
+            )}
+
+            {result && (
+              <section className="glass-panel result-panel animate-slide-up">
+                <h2 className="result-title">Destination Reached</h2>
+
+                {result.security && !result.security.is_safe && (
+                  <div className="glass-panel error-panel animate-slide-up" style={{ marginBottom: '1.5rem' }}>
+                    <ShieldAlert size={24} color="var(--error-color)" />
+                    <div className="error-text">
+                      <strong>Security Warning:</strong> This URL has been flagged as {result.security.threat_type?.replace(/_/g, ' ') || 'a threat'}. 
+                      Proceeding is highly discouraged.
+                    </div>
+                  </div>
+                )}
+
+                <div className="result-card final-destination animate-slide-up">
+                  <span className="label text-gradient">Final URL</span>
+                  <a href={result.final_url} target="_blank" rel="noopener noreferrer" className="url final-url">
+                    {result.final_url}
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
+
+                {result.cleaned_url !== result.final_url && (
+                  <div className="result-card cleaned-destination animate-slide-up">
+                    <span className="label text-gradient">Cleaned URL (Trackers Removed)</span>
+                    <a href={result.cleaned_url} target="_blank" rel="noopener noreferrer" className="url cleaned-url">
+                      {result.cleaned_url}
+                      <ExternalLink size={16} />
+                    </a>
+                  </div>
+                )}
+
+                {result.preview && (result.preview.title || result.preview.description || result.preview.image_url) && (
+                  <div className="result-card page-preview animate-slide-up">
+                    <div className="preview-image-container">
+                      <img 
+                        src={result.preview.image_url || '/no-image.png'} 
+                        alt="Page Preview" 
+                        className="preview-image" 
+                      />
+                    </div>
+                    <div className="preview-content">
+                      {result.preview.title && <h3 className="preview-title">{result.preview.title}</h3>}
+                      {result.preview.description && <p className="preview-description">{result.preview.description}</p>}
+                    </div>
+                  </div>
+                )}
+
+                <div className="result-stats">
+                  <div className="stat">
+                    <Clock size={16} className="stat-icon" />
+                    <span>Traced in <strong>{result.response_time_ms}ms</strong></span>
+                    {result.cached && (
+                      <span style={{ marginLeft: '8px', fontSize: '0.75rem', padding: '2px 6px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px' }}>
+                        Cached
+                      </span>
+                    )}
+                  </div>
+                  <div className="stat">
+                    <LinkIcon size={16} className="stat-icon" />
+                    <span><strong>{result.redirect_chain.length - 1}</strong> Hops</span>
+                  </div>
+                </div>
+
+                {result.redirect_chain.length > 1 && (
+                  <div className="redirect-chain">
+                    <h3 className="chain-title">Redirect Journey</h3>
+                    <ol className="chain-list">
+                      {result.redirect_chain.map((link, index) => (
+                        <li key={index} className="chain-item">
+                          <div className="hop-node"></div>
+                          <span className="hop-url">{link}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </section>
+            )}
+          </>
         )}
       </main>
 
