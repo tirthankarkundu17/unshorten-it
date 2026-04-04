@@ -10,7 +10,7 @@
 
 - **Backend**: Fast unshortener by following redirect chains (e.g., bit.ly, t.co, youtu.be, etc.). Features **Tracker Stripping** (removes utm_* tags automatically) and **Link Preview Extraction** (Open Graph data). Built with [FastAPI](https://fastapi.tiangolo.com/), [HTTPX](https://www.python-httpx.org/), and BeautifulSoup. Features a Hybrid Cache (Redis & DiskCache) for blazing fast responses.
 - **Android App**: Native Kotlin Android App that intercepts sharing intents anywhere in the OS, resolving links securely before you open them. Includes a smart SQLite cache, per-entry history deletion, material 3 design, and swipe-to-refresh features. **[Get it on Google Play](https://play.google.com/store/apps/details?id=in.bitmaskers.unshortenit)**
-- **Frontend**: A beautiful, modern, and highly responsive React interface designed with Vanilla CSS (Glassmorphism, dark mode, rich micro-animations) that displays full destination tracing and rich social previews.
+- **Frontend**: A beautiful, modern, and highly responsive Progressive Web App (PWA) built with React and Vanilla CSS (Glassmorphism, dark mode, rich micro-animations). It displays full destination tracing, rich social previews, and supports **Offline Local History** functionality, allowing users to safely view recently unshortened links even without an internet connection.
 - **Analytics**: Cross-platform tracking differentiation via custom headers (`X-App-Platform`) logged directly to MongoDB.
 - Includes robust error handling and input validation across the stack.
 - Organized project structure adhering to modern best practices.
