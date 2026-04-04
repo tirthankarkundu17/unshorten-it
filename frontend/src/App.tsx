@@ -79,7 +79,7 @@ function App() {
 
       const response = await fetch(`${apiBaseUrl}/api/v1/unshorten`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'X-App-Platform': 'web'
         },
@@ -93,10 +93,10 @@ function App() {
 
       const data = (await response.json()) as UnshortenResponse;
       setResult(data);
-      
+
       setHistory(prev => {
         const newHistory = [{ ...data, timestamp: Date.now() }, ...prev.filter(h => h.original_url !== data.original_url)];
-        return newHistory.slice(0, 50); // Keep last 50
+        return newHistory.slice(0, 20); // Keep last 20
       });
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
@@ -117,16 +117,16 @@ function App() {
       <header className="hero animate-slide-up" style={{ position: 'relative' }}>
         <h1 className="title text-gradient">Unshorten It</h1>
         <p className="subtitle">Melt away the mystery. Discover exactly where any shortened link is taking you before you click.</p>
-        
+
         {history.length > 0 && (
-           <button 
-             className="glass-input" 
-             style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.5rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}
-             onClick={() => setShowHistory(!showHistory)}
-           >
-             <History size={18} />
-             <span>History</span>
-           </button>
+          <button
+            className="glass-input"
+            style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.5rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}
+            onClick={() => setShowHistory(!showHistory)}
+          >
+            <History size={18} />
+            <span>History</span>
+          </button>
         )}
       </header>
 
@@ -138,9 +138,9 @@ function App() {
                 <History size={26} color="var(--accent-color)" />
                 <h2 className="result-title" style={{ margin: 0 }}>Recent History</h2>
               </div>
-              <button 
-                 className="clear-btn"
-                 onClick={() => { setHistory([]); setShowHistory(false); }} 
+              <button
+                className="clear-btn"
+                onClick={() => { setHistory([]); setShowHistory(false); }}
               >
                 <Trash2 size={16} />
                 <span>Clear All</span>
@@ -213,7 +213,7 @@ function App() {
                   <div className="glass-panel error-panel animate-slide-up" style={{ marginBottom: '1.5rem' }}>
                     <ShieldAlert size={24} color="var(--error-color)" />
                     <div className="error-text">
-                      <strong>Security Warning:</strong> This URL has been flagged as {result.security.threat_type?.replace(/_/g, ' ') || 'a threat'}. 
+                      <strong>Security Warning:</strong> This URL has been flagged as {result.security.threat_type?.replace(/_/g, ' ') || 'a threat'}.
                       Proceeding is highly discouraged.
                     </div>
                   </div>
@@ -240,10 +240,10 @@ function App() {
                 {result.preview && (result.preview.title || result.preview.description || result.preview.image_url) && (
                   <div className="result-card page-preview animate-slide-up">
                     <div className="preview-image-container">
-                      <img 
-                        src={result.preview.image_url || '/no-image.png'} 
-                        alt="Page Preview" 
-                        className="preview-image" 
+                      <img
+                        src={result.preview.image_url || '/no-image.png'}
+                        alt="Page Preview"
+                        className="preview-image"
                       />
                     </div>
                     <div className="preview-content">
