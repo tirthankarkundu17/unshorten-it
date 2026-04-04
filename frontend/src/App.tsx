@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History } from 'lucide-react';
+import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight } from 'lucide-react';
 import './App.css';
 
 interface PagePreview {
@@ -132,30 +132,46 @@ function App() {
 
       <main className="main-content">
         {showHistory ? (
-          <section className="glass-panel animate-slide-up" style={{ textAlign: 'left' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 className="result-title" style={{ margin: 0 }}>Recent History</h2>
+          <section className="glass-panel animate-slide-up" style={{ textAlign: 'left', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <History size={26} color="var(--accent-color)" />
+                <h2 className="result-title" style={{ margin: 0 }}>Recent History</h2>
+              </div>
               <button 
+                 className="clear-btn"
                  onClick={() => { setHistory([]); setShowHistory(false); }} 
-                 style={{ background: 'transparent', color: '#ff4d4f', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
               >
-                Clear All
+                <Trash2 size={16} />
+                <span>Clear All</span>
               </button>
             </div>
             {history.length === 0 ? (
-              <p>No history available.</p>
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}>
+                <History size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                <p style={{ fontSize: '1.1rem' }}>No history available yet.</p>
+              </div>
             ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {history.map((item, idx) => (
-                  <li key={idx} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', cursor: 'pointer' }} onClick={() => loadFromHistory(item)}>
-                    <div style={{ wordBreak: 'break-all', fontWeight: 500, color: '#e2e8f0', marginBottom: '0.25rem' }}>{item.original_url}</div>
-                    <div style={{ wordBreak: 'break-all', fontSize: '0.85rem', color: '#94a3b8' }}>&rarr; {item.final_url}</div>
+                  <li key={idx} className="history-card" onClick={() => loadFromHistory(item)}>
+                    <div className="history-header">
+                      <LinkIcon size={18} className="history-icon" />
+                      <span>{item.original_url}</span>
+                    </div>
+                    <div className="history-subheader">
+                      <CornerDownRight size={18} className="history-icon" />
+                      <span>{item.final_url}</span>
+                    </div>
                   </li>
                 ))}
               </ul>
             )}
-            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-              <button className="btn-primary" onClick={() => setShowHistory(false)} style={{ padding: '0.5rem 1rem' }}>Back</button>
+            <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+              <button className="btn-primary back-btn" onClick={() => setShowHistory(false)}>
+                <ArrowLeft size={18} />
+                <span>Back to Search</span>
+              </button>
             </div>
           </section>
         ) : (
