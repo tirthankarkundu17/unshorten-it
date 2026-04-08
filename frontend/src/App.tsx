@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight } from 'lucide-react';
+import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight, QrCode, X } from 'lucide-react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import './App.css';
 
 interface PagePreview {
@@ -49,7 +50,8 @@ function App() {
   });
 
   const [showHistory, setShowHistory] = useState(false);
-
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannerError, setScannerError] = useState<string | null>(null);
   useEffect(() => {
     localStorage.setItem('unshorten_history', JSON.stringify(history));
   }, [history]);
@@ -114,20 +116,20 @@ function App() {
 
   return (
     <div className="app-container">
-      <header className="hero animate-slide-up" style={{ position: 'relative' }}>
-        <h1 className="title text-gradient">Unshorten It</h1>
-        <p className="subtitle">Melt away the mystery. Discover exactly where any shortened link is taking you before you click.</p>
-
+      <div className="top-bar">
         {history.length > 0 && (
           <button
-            className="glass-input"
-            style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.5rem', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}
+            className="glass-btn history-toggle-btn"
             onClick={() => setShowHistory(!showHistory)}
           >
             <History size={18} />
             <span>History</span>
           </button>
         )}
+      </div>
+      <header className="hero animate-slide-up">
+        <h1 className="title text-gradient">Unshorten It</h1>
+        <p className="subtitle">Melt away the mystery. Discover exactly where any shortened link is taking you before you click.</p>
       </header>
 
       <main className="main-content">
@@ -188,16 +190,58 @@ function App() {
                   disabled={isLoading}
                 />
               </div>
-              <button type="submit" className="btn-primary" disabled={isLoading || !url.trim()}>
-                {isLoading ? <span className="spinner"></span> : (
-                  <>
-                    <Search size={20} />
-                    <span>Unshorten</span>
-                  </>
-                )}
-              </button>
+              <div className="action-buttons">
+                <button
+                  type="button"
+                  className="scanner-btn-secondary"
+                  onClick={() => setShowScanner(true)}
+                  title="Scan QR Code"
+                  disabled={isLoading}
+                >
+                  <QrCode size={20} />
+                  <span className="scanner-btn-text">Scan QR</span>
+                </button>
+                <button type="submit" className="btn-primary" disabled={isLoading || !url.trim()} style={{ flex: 1 }}>
+                  {isLoading ? <span className="spinner"></span> : (
+                    <>
+                      <Search size={20} />
+                      <span>Unshorten</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
 
+            {showScanner && (
+              <div className="glass-panel scanner-panel animate-slide-up" style={{ position: 'relative', marginTop: '1rem', padding: '1.5rem', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <QrCode size={20} color="var(--accent-color)" /> Scan QR Code
+                  </h3>
+                  <button type="button" className="clear-btn" onClick={() => { setShowScanner(false); setScannerError(null); }} style={{ padding: '0.5rem' }}>
+                    <X size={20} />
+                  </button>
+                </div>
+                {scannerError ? (
+                  <div className="error-text" style={{ textAlign: 'center', color: 'var(--error-color)', marginBottom: '1rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
+                    {scannerError}
+                  </div>
+                ) : null}
+                <div style={{ borderRadius: '12px', overflow: 'hidden', background: '#000', display: 'flex', justifyContent: 'center' }}>
+                  <Scanner
+                    onScan={(result) => {
+                      if (Array.isArray(result) && result.length > 0) {
+                        setUrl(result[0].rawValue);
+                        setShowScanner(false);
+                      }
+                    }}
+                    onError={(error: any) => {
+                      setScannerError(error?.message || 'Failed to start camera.');
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             {error && (
               <div className="glass-panel error-panel animate-slide-up">
                 <AlertCircle size={24} color="var(--error-color)" />
