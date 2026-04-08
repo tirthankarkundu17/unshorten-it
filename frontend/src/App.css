@@ -6,41 +6,6 @@
   box-sizing: border-box;
 }
 
-.update-toast {
-  position: fixed;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 1.25rem 2rem;
-  max-width: 90%;
-  background: var(--bg-card);
-  border-color: var(--accent-glow);
-  box-shadow: 0 15px 40px -10px rgba(0,0,0,0.8), 0 0 20px var(--accent-glow);
-  width: max-content;
-}
-
-.update-toast-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.update-icon {
-  color: var(--accent-color);
-  animation: spin 3s linear infinite;
-}
-
-.update-toast-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
 .hero {
   text-align: center;
   margin-bottom: 3rem;
