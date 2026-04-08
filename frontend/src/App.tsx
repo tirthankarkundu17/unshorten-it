@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight, QrCode, X } from 'lucide-react';
+import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight, QrCode, X, RefreshCw } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import './App.css';
 
 interface PagePreview {
@@ -36,6 +37,18 @@ interface ErrorResponse {
 }
 
 function App() {
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegistered(r) {
+      console.log('SW Registered: ' + r);
+    },
+    onRegisterError(error) {
+      console.log('SW registration error', error);
+    },
+  });
+
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<UnshortenResponse | null>(null);
@@ -116,6 +129,26 @@ function App() {
 
   return (
     <div className="app-container">
+      {needRefresh && (
+        <div className="glass-panel update-toast animate-slide-up">
+          <div className="update-toast-content">
+            <RefreshCw size={20} className="update-icon" />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Update Available!</span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Click to refresh and get the latest features.</span>
+            </div>
+          </div>
+          <div className="update-toast-actions">
+            <button className="clear-btn" onClick={() => setNeedRefresh(false)}>
+              Ignore
+            </button>
+            <button className="btn-primary" onClick={() => updateServiceWorker(true)} style={{ padding: '0.6rem 1.25rem', fontSize: '0.9rem', minWidth: 'auto', borderRadius: '8px' }}>
+              Update App
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="top-bar">
         {history.length > 0 && (
           <button
