@@ -62,6 +62,12 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.rounded.QrCodeScanner
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -71,6 +77,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
+import `in`.bitmaskers.unshortenit.ui.components.QrScannerView
 import `in`.bitmaskers.unshortenit.utils.SharedPrefsKeys
 
 @Composable
@@ -83,6 +90,18 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val context = LocalContext.current
+
+    var isScannerOpen by remember { mutableStateOf(false) }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            isScannerOpen = true
+        } else {
+            Toast.makeText(context, "Camera permission is required to scan QR codes", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(unshortenError) {
         unshortenError?.let {
@@ -184,6 +203,22 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                 onValueChange = { inputUrl = it },
                 placeholder = { Text("e.g., bit.ly/abc123", color = Color(0xFF94A3B8)) },
                 modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        val permission = Manifest.permission.CAMERA
+                        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                            isScannerOpen = true
+                        } else {
+                            cameraPermissionLauncher.launch(permission)
+                        }
+                    }) {
+                        Icon(
+                            imageVector = Icons.Rounded.QrCodeScanner,
+                            contentDescription = "Scan QR",
+                            tint = Color(0xFF64748B)
+                        )
+                    }
+                },
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = Color(0xFFF1F5F9),
@@ -289,6 +324,17 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
             contentAlignment = Alignment.BottomCenter
         ) {
             AdmobBanner()
+        }
+
+        if (isScannerOpen) {
+            QrScannerView(
+                onScan = { url ->
+                    inputUrl = url
+                    isScannerOpen = false
+                    viewModel.unshortenUrl(url)
+                },
+                onClose = { isScannerOpen = false }
+            )
         }
     }
 }
