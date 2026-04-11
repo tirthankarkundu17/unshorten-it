@@ -31,8 +31,8 @@ android {
         applicationId = "in.bitmaskers.unshortenit"
         minSdk = 24
         targetSdk = 36
-        versionCode = 8
-        versionName = "4.2"
+        versionCode = 9
+        versionName = "5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -114,4 +114,10 @@ dependencies {
     implementation(libs.play.services.ads)
     implementation(libs.coil.compose)
     implementation(libs.play.review.ktx)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mlkit.barcode.scanning)
+    implementation(libs.guava)
 }
