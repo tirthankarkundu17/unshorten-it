@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 URLHAUS_ZIP_URL = "https://urlhaus.abuse.ch/downloads/csv/"
 URLHAUS_RECENT_CSV_URL = "https://urlhaus.abuse.ch/downloads/csv_recent/"
-SYNC_INTERVAL_SECONDS = 3600 * 1 # Sync once a day, or every hour
+SYNC_INTERVAL_SECONDS = int(os.environ.get('SYNC_INTERVAL_SECONDS', 3600))  # default to 1 hour if not set
 
 async def sync_urlhaus_feed():
     """Background task to download and sync URLhaus CSV zip to MongoDB"""
