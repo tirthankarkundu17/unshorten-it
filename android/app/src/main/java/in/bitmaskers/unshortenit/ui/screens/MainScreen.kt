@@ -32,7 +32,6 @@ import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import `in`.bitmaskers.unshortenit.R
-import com.google.android.play.core.review.ReviewManagerFactory
 
 @Composable
 fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
@@ -70,28 +69,7 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
                     onClick = {
                         viewModel.onReviewAction(ReviewAction.RATE_NOW)
                         if (activity != null) {
-                            val reviewManager = ReviewManagerFactory.create(activity)
-                            val request = reviewManager.requestReviewFlow()
-                            request.addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    val reviewInfo = task.result
-                                    reviewManager.launchReviewFlow(activity, reviewInfo)
-                                } else {
-                                    // Fallback to launching Play Store URL if In-App Review fails
-                                    try {
-                                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                                            data = android.net.Uri.parse("market://details?id=${activity.packageName}")
-                                            setPackage("com.android.vending")
-                                        }
-                                        activity.startActivity(intent)
-                                    } catch (e: Exception) {
-                                        val intent = Intent(Intent.ACTION_VIEW).apply {
-                                            data = android.net.Uri.parse("https://play.google.com/store/apps/details?id=${activity.packageName}")
-                                        }
-                                        activity.startActivity(intent)
-                                    }
-                                }
-                            }
+                            launchPlayStore(activity)
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -223,3 +201,19 @@ fun BottomNavigation(pagerState: PagerState, coroutineScope: kotlinx.coroutines.
         }
     }
 }
+
+private fun launchPlayStore(activity: Activity) {
+    try {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = android.net.Uri.parse("market://details?id=${activity.packageName}")
+            setPackage("com.android.vending")
+        }
+        activity.startActivity(intent)
+    } catch (e: Exception) {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = android.net.Uri.parse("https://play.google.com/store/apps/details?id=${activity.packageName}")
+        }
+        activity.startActivity(intent)
+    }
+}
+
