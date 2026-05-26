@@ -13,8 +13,8 @@ class AppPreferencesRepository(
     private val prefs: SharedPreferences = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
 
     companion object {
-        private const val KEY_NEVER_SHOW_REVIEW = "NEVER_SHOW_REVIEW"
-        private const val KEY_LAST_PROMPT_TIME = "LAST_PROMPT_TIME"
+        private const val KEY_NEVER_SHOW_REVIEW = "NEVER_SHOW_REVIEW_MAY_01"
+        private const val KEY_LAST_PROMPT_TIME = "LAST_PROMPT_TIME_2026_MAY_01"
         private const val MIN_DAYS_BETWEEN_PROMPTS = 7L
         const val MIN_TIME_BETWEEN_PROMPTS_MS = MIN_DAYS_BETWEEN_PROMPTS * 24 * 60 * 60 * 1000
     }
