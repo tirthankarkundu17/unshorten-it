@@ -24,10 +24,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
+import `in`.bitmaskers.unshortenit.ui.viewmodel.ReviewAction
 import kotlinx.coroutines.launch
 
 import android.app.Activity
+import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import `in`.bitmaskers.unshortenit.R
 import com.google.android.play.core.review.ReviewManagerFactory
 
 @Composable
@@ -39,19 +43,86 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
     val context = LocalContext.current
     val activity = context as? Activity
 
-    LaunchedEffect(Unit) {
-        viewModel.showReviewEvent.collect { shouldShow ->
-            if (shouldShow && activity != null) {
-                val reviewManager = ReviewManagerFactory.create(activity)
-                val request = reviewManager.requestReviewFlow()
-                request.addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val reviewInfo = task.result
-                        reviewManager.launchReviewFlow(activity, reviewInfo)
+    val showReviewDialog by viewModel.showReviewDialog.collectAsState()
+
+    if (showReviewDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                viewModel.onReviewAction(ReviewAction.REMIND_LATER)
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.review_prompt_title),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.review_prompt_message),
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.onReviewAction(ReviewAction.RATE_NOW)
+                        if (activity != null) {
+                            val reviewManager = ReviewManagerFactory.create(activity)
+                            val request = reviewManager.requestReviewFlow()
+                            request.addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val reviewInfo = task.result
+                                    reviewManager.launchReviewFlow(activity, reviewInfo)
+                                } else {
+                                    // Fallback to launching Play Store URL if In-App Review fails
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                                            data = android.net.Uri.parse("market://details?id=${activity.packageName}")
+                                            setPackage("com.android.vending")
+                                        }
+                                        activity.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                                            data = android.net.Uri.parse("https://play.google.com/store/apps/details?id=${activity.packageName}")
+                                        }
+                                        activity.startActivity(intent)
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4F46E5) // Matches modern Indigo accent
+                    )
+                ) {
+                    Text(stringResource(R.string.review_prompt_rate_now), color = Color.White)
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            viewModel.onReviewAction(ReviewAction.NEVER)
+                        }
+                    ) {
+                        Text(stringResource(R.string.review_prompt_no_thanks), color = Color(0xFF64748B))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = {
+                            viewModel.onReviewAction(ReviewAction.REMIND_LATER)
+                        }
+                    ) {
+                        Text(stringResource(R.string.review_prompt_later), color = Color(0xFF4F46E5))
                     }
                 }
-            }
-        }
+            },
+            containerColor = Color.White,
+            shape = MaterialTheme.shapes.large
+        )
     }
 
     DisposableEffect(lifecycleOwner) {

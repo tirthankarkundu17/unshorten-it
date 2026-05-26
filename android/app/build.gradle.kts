@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "in.bitmaskers.unshortenit"
-    compileSdk = 36
+    compileSdk = 37
 
     // Load local.properties if it exists
     val localProperties = Properties()

@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Unshorten IT</string>
+    <string name="review_prompt_title">Enjoying Unshorten It?</string>
+    <string name="review_prompt_message">If you find this app useful, please take a moment to rate us on the Play Store! Your feedback is appreciated.</string>
+    <string name="review_prompt_rate_now">Rate Now</string>
+    <string name="review_prompt_no_thanks">No Thanks</string>
+    <string name="review_prompt_later">Later</string>
 </resources>

@@ -2,8 +2,10 @@ package `in`.bitmaskers.unshortenit.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import `in`.bitmaskers.unshortenit.utils.SharedPrefsKeys.APP_PREFS_NAME
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -25,22 +27,25 @@ class AppPreferencesRepositoryTest {
 
     @Before
     fun setup() {
+        mockkStatic(android.util.Log::class)
+        every { android.util.Log.d(any(), any()) } returns 0
+
         context = mockk()
         sharedPreferences = mockk()
         editor = mockk(relaxed = true)
 
-        every { context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE) } returns sharedPreferences
+        every { context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE) } returns sharedPreferences
         every { sharedPreferences.edit() } returns editor
 
-        // Mock Int getting/setting
-        every { sharedPreferences.getInt(any(), any()) } answers {
+        // Mock Boolean getting/setting
+        every { sharedPreferences.getBoolean(any(), any()) } answers {
             val key = args[0] as String
-            val default = args[1] as Int
-            mockPrefsMap[key] as? Int ?: default
+            val default = args[1] as Boolean
+            mockPrefsMap[key] as? Boolean ?: default
         }
-        every { editor.putInt(any(), any()) } answers {
+        every { editor.putBoolean(any(), any()) } answers {
             val key = args[0] as String
-            val value = args[1] as Int
+            val value = args[1] as Boolean
             mockPrefsMap[key] = value
             editor
         }
@@ -65,32 +70,9 @@ class AppPreferencesRepositoryTest {
     }
 
     @Test
-    fun `incrementUsageCount - from 0 increments to 1`() {
-        mockPrefsMap.clear() // Start fresh
-        repository.incrementUsageCount()
-        assertEquals(1, mockPrefsMap["USAGE_COUNT"])
-    }
-
-    @Test
-    fun `incrementUsageCount - resets to 1 after surpassing target rating count`() {
-        // Start count at TARGET_RATING_COUNT (e.g. 1 in current code)
-        mockPrefsMap["USAGE_COUNT"] = 1
-        repository.incrementUsageCount()
-        
-        // Next logic says: if >= target (1), nextCount is 1.
-        assertEquals(1, mockPrefsMap["USAGE_COUNT"])
-    }
-
-    @Test
-    fun `shouldShowRatePopup - false when target not reached`() {
-        mockPrefsMap["USAGE_COUNT"] = 0 // not 1
-        assertFalse(repository.shouldShowRatePopup())
-    }
-
-    @Test
-    fun `shouldShowRatePopup - true when target reached and no previous prompt`() {
-        mockPrefsMap["USAGE_COUNT"] = 1
-        mockPrefsMap.remove("LAST_PROMPT_TIME") // 0 by default
+    fun `shouldShowRatePopup - true when neverShowAgain is false and no previous prompt`() {
+        mockPrefsMap["NEVER_SHOW_REVIEW"] = false
+        mockPrefsMap.remove("LAST_PROMPT_TIME")
         
         mockCurrentTime = AppPreferencesRepository.MIN_TIME_BETWEEN_PROMPTS_MS + 1000L
         
@@ -98,24 +80,53 @@ class AppPreferencesRepositoryTest {
     }
 
     @Test
-    fun `shouldShowRatePopup - false when target reached but not enough time passed`() {
-        mockPrefsMap["USAGE_COUNT"] = 1
+    fun `shouldShowRatePopup - false when neverShowAgain is false but not enough time passed`() {
+        mockPrefsMap["NEVER_SHOW_REVIEW"] = false
         mockPrefsMap["LAST_PROMPT_TIME"] = 1000L
         
-        // Wait only half a day (less than MIN_TIME_BETWEEN_PROMPTS_MS)
         mockCurrentTime = 1000L + (AppPreferencesRepository.MIN_TIME_BETWEEN_PROMPTS_MS / 2)
         
         assertFalse(repository.shouldShowRatePopup())
     }
 
     @Test
-    fun `shouldShowRatePopup - true when target reached and exactly 10 days passed`() {
-        mockPrefsMap["USAGE_COUNT"] = 1
+    fun `shouldShowRatePopup - true when neverShowAgain is false and exactly 10 days passed`() {
+        mockPrefsMap["NEVER_SHOW_REVIEW"] = false
         mockPrefsMap["LAST_PROMPT_TIME"] = 1000L
         
         mockCurrentTime = 1000L + AppPreferencesRepository.MIN_TIME_BETWEEN_PROMPTS_MS
         
         assertTrue(repository.shouldShowRatePopup())
+    }
+
+    @Test
+    fun `shouldShowRatePopup - false when neverShowAgain is true`() {
+        mockPrefsMap["NEVER_SHOW_REVIEW"] = true
+        mockPrefsMap.remove("LAST_PROMPT_TIME")
+        
+        mockCurrentTime = AppPreferencesRepository.MIN_TIME_BETWEEN_PROMPTS_MS + 1000L
+        
+        assertFalse(repository.shouldShowRatePopup())
+    }
+
+    @Test
+    fun `setNeverShowReviewAgain - saves correct value`() {
+        repository.setNeverShowReviewAgain(true)
+        verify { editor.putBoolean("NEVER_SHOW_REVIEW", true) }
+        assertTrue(mockPrefsMap["NEVER_SHOW_REVIEW"] as Boolean)
+
+        repository.setNeverShowReviewAgain(false)
+        verify { editor.putBoolean("NEVER_SHOW_REVIEW", false) }
+        assertFalse(mockPrefsMap["NEVER_SHOW_REVIEW"] as Boolean)
+    }
+
+    @Test
+    fun `isNeverShowReviewAgain - returns correct value`() {
+        mockPrefsMap["NEVER_SHOW_REVIEW"] = true
+        assertTrue(repository.isNeverShowReviewAgain())
+
+        mockPrefsMap["NEVER_SHOW_REVIEW"] = false
+        assertFalse(repository.isNeverShowReviewAgain())
     }
 
     @Test
