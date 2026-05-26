@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "in.bitmaskers.unshortenit"
-    compileSdk = 36
+    compileSdk = 37
 
     // Load local.properties if it exists
     val localProperties = Properties()
@@ -31,8 +31,8 @@ android {
         applicationId = "in.bitmaskers.unshortenit"
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
-        versionName = "5.0"
+        versionCode = 11
+        versionName = "5.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         

@@ -13,20 +13,18 @@ class AppPreferencesRepository(
     private val prefs: SharedPreferences = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
 
     companion object {
-        private const val KEY_USAGE_COUNT = "USAGE_COUNT"
-        private const val KEY_LAST_PROMPT_TIME = "LAST_PROMPT_TIME"
-        private const val TARGET_RATING_COUNT = 5 // Configurable count target
-        const val MIN_DAYS_BETWEEN_PROMPTS = 10L
+        private const val KEY_NEVER_SHOW_REVIEW = "NEVER_SHOW_REVIEW_MAY_01"
+        private const val KEY_LAST_PROMPT_TIME = "LAST_PROMPT_TIME_2026_MAY_01"
+        private const val MIN_DAYS_BETWEEN_PROMPTS = 7L
         const val MIN_TIME_BETWEEN_PROMPTS_MS = MIN_DAYS_BETWEEN_PROMPTS * 24 * 60 * 60 * 1000
     }
 
-    fun incrementUsageCount() {
-        val currentCount = prefs.getInt(KEY_USAGE_COUNT, 0)
-        
-        // Loop it back to 1 if it has surpassed the target rating count previously
-        val nextCount = if (currentCount >= TARGET_RATING_COUNT) 1 else currentCount + 1
-        
-        prefs.edit { putInt(KEY_USAGE_COUNT, nextCount) }
+    fun setNeverShowReviewAgain(neverShow: Boolean) {
+        prefs.edit { putBoolean(KEY_NEVER_SHOW_REVIEW, neverShow) }
+    }
+
+    fun isNeverShowReviewAgain(): Boolean {
+        return prefs.getBoolean(KEY_NEVER_SHOW_REVIEW, false)
     }
 
     fun markRatingPromptShown() {
@@ -34,17 +32,14 @@ class AppPreferencesRepository(
     }
 
     fun shouldShowRatePopup(): Boolean {
-        val currentCount = prefs.getInt(KEY_USAGE_COUNT, 0)
+        if (isNeverShowReviewAgain()) {
+            return false
+        }
         val lastPromptTime = prefs.getLong(KEY_LAST_PROMPT_TIME, 0L)
         val currentTime = timeProvider()
-
-        // Show exactly when it hits the target (loops each cycle)
-        val isTargetReached = currentCount == TARGET_RATING_COUNT
-        // Check if the 10 days gap has been surpassed
         val isEnoughTimePassed = (currentTime - lastPromptTime) >= MIN_TIME_BETWEEN_PROMPTS_MS
-        
-        Log.d("AppPrefsRepo", "Rate popup check - isTargetReached: $isTargetReached (count: $currentCount), isEnoughTimePassed: $isEnoughTimePassed")
-        
-        return isTargetReached && isEnoughTimePassed
+
+        Log.d("AppPrefsRepo", "Rate popup check - lastPromptTime: $lastPromptTime, isEnoughTimePassed: $isEnoughTimePassed")
+        return isEnoughTimePassed
     }
 }

@@ -19,8 +19,8 @@ class DashboardViewModel(
     private val unshortenRepository: UnshortenRepository
 ) : ViewModel() {
 
-    private val _showReviewEvent = MutableSharedFlow<Boolean>()
-    val showReviewEvent = _showReviewEvent.asSharedFlow()
+    private val _showReviewDialog = MutableStateFlow(false)
+    val showReviewDialog: StateFlow<Boolean> = _showReviewDialog
 
     private val _isUnshortening = MutableStateFlow(false)
     val isUnshortening: StateFlow<Boolean> = _isUnshortening
@@ -33,6 +33,32 @@ class DashboardViewModel(
 
     init {
         loadHistory()
+        checkReviewPromptOnStartup()
+    }
+
+    private fun checkReviewPromptOnStartup() {
+        viewModelScope.launch {
+            if (appPreferencesRepository.shouldShowRatePopup()) {
+                _showReviewDialog.value = true
+            }
+        }
+    }
+
+    fun onReviewAction(action: ReviewAction) {
+        viewModelScope.launch {
+            when (action) {
+                ReviewAction.RATE_NOW -> {
+                    appPreferencesRepository.setNeverShowReviewAgain(true)
+                }
+                ReviewAction.NEVER -> {
+                    appPreferencesRepository.setNeverShowReviewAgain(true)
+                }
+                ReviewAction.REMIND_LATER -> {
+                    appPreferencesRepository.markRatingPromptShown()
+                }
+            }
+            _showReviewDialog.value = false
+        }
     }
 
     fun loadHistory(isRefresh: Boolean = false) {
@@ -85,11 +111,6 @@ class DashboardViewModel(
                         isSafe = response.security?.isSafe ?: true,
                         threatType = response.security?.threatType
                     )
-                    appPreferencesRepository.incrementUsageCount()
-                    if (appPreferencesRepository.shouldShowRatePopup()) {
-                        _showReviewEvent.emit(true)
-                        appPreferencesRepository.markRatingPromptShown()
-                    }
                     loadHistory(isRefresh = true)
                 } catch (e: Exception) {
                     _unshortenError.value = "Failed to save to history"
@@ -126,3 +147,10 @@ class DashboardViewModel(
         }
     }
 }
+
+enum class ReviewAction {
+    RATE_NOW,
+    REMIND_LATER,
+    NEVER
+}
+
