@@ -146,3 +146,6 @@ cython_debug/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Temp
+backend/tmp/*
