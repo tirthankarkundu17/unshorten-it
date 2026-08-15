@@ -5,6 +5,16 @@ import shutil
 import httpx
 from app.main import app
 from app.services.cache_service import cache_service
+from app.services.database_service import db_service
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def initialize_db_and_cache(setup_test_environment):
+    cache_service.initialize()
+    db_service.initialize()
+    yield
+    await cache_service.close()
+    await db_service.close()
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
@@ -16,6 +26,7 @@ def setup_test_environment():
     test_cache_dir = "/tmp/unshorten_test_cache"
     os.environ["DISKCACHE_DIR"] = test_cache_dir
     os.environ["REDIS_URL"] = "" # Ensure redis isn't used
+    os.environ["MONGODB_DATABASE"] = "unshorten_it_test"
     
     yield
     

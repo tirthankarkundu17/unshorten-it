@@ -1,5 +1,6 @@
 from pydantic import BaseModel, HttpUrl
 from typing import List, Optional, Any, Dict
+from datetime import datetime
 
 class ErrorDetail(BaseModel):
     code: str
@@ -30,3 +31,35 @@ class URLResponse(BaseModel):
     cached: bool = False
     preview: Optional[PagePreview] = None
     security: Optional[SecurityCheck] = None
+
+class UserRegister(BaseModel):
+    username: str
+    password: str
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    username: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class StatusResponse(BaseModel):
+    status: str
+    message: str
+
+class HistoryItemResponse(BaseModel):
+    id: str
+    original_url: str
+    final_url: str
+    cleaned_url: str
+    redirect_chain: List[str]
+    response_time_ms: float
+    timestamp: datetime
+    preview: Optional[PagePreview] = None
+    security: Optional[SecurityCheck] = None
+

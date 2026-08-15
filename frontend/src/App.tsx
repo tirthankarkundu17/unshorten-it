@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight, QrCode, X } from 'lucide-react';
+import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight, QrCode, X, User, Lock } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import './App.css';
 
@@ -40,27 +40,171 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<UnshortenResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('unshorten_history');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  
+  // Auth states
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('unshorten_auth_token'));
+  const [user, setUser] = useState<{ id: string; username: string } | null>(null);
+  const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
+  const [authUsername, setAuthUsername] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
 
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
+
+  // Sync auth and history
   useEffect(() => {
-    localStorage.setItem('unshorten_history', JSON.stringify(history));
-  }, [history]);
+    const initAuthAndHistory = async () => {
+      if (token) {
+        try {
+          let apiBaseUrl = (window as any)._env_?.API_BASE_URL || import.meta.env.API_BASE_URL;
+          if (typeof apiBaseUrl === 'string') {
+            apiBaseUrl = apiBaseUrl.replace(/^["']|["']$/g, '');
+          }
+
+          // Verify token and fetch user details
+          const meResponse = await fetch(`${apiBaseUrl}/api/v1/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          if (meResponse.ok) {
+            const meData = await meResponse.json();
+            setUser(meData);
+
+            // Fetch cloud history
+            const historyResponse = await fetch(`${apiBaseUrl}/api/v1/history`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            if (historyResponse.ok) {
+              const historyData = await historyResponse.json();
+              setHistory(historyData);
+            }
+          } else {
+            // Token is invalid/expired
+            handleLogout();
+          }
+        } catch (err) {
+          console.error("Auth initialization failed:", err);
+          // Fallback to local storage on error
+          const saved = localStorage.getItem('unshorten_history');
+          if (saved) {
+            setHistory(JSON.parse(saved));
+          }
+        }
+      } else {
+        // Logged out: read local storage history
+        const saved = localStorage.getItem('unshorten_history');
+        setHistory(saved ? JSON.parse(saved) : []);
+      }
+    };
+
+    initAuthAndHistory();
+  }, [token]);
+
+  // Save guest history to local storage
+  useEffect(() => {
+    if (!token) {
+      localStorage.setItem('unshorten_history', JSON.stringify(history));
+    }
+  }, [history, token]);
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthLoading(true);
+
+    let apiBaseUrl = (window as any)._env_?.API_BASE_URL || import.meta.env.API_BASE_URL;
+    if (typeof apiBaseUrl === 'string') {
+      apiBaseUrl = apiBaseUrl.replace(/^["']|["']$/g, '');
+    }
+
+    try {
+      if (authMode === 'register') {
+        const response = await fetch(`${apiBaseUrl}/api/v1/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: authUsername, password: authPassword }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error?.message || 'Registration failed');
+        }
+      }
+
+      // Automatically login
+      const loginResponse = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: authUsername, password: authPassword }),
+      });
+
+      if (!loginResponse.ok) {
+        const errData = await loginResponse.json();
+        throw new Error(errData.error?.message || 'Login failed');
+      }
+
+      const tokenData = await loginResponse.json();
+      localStorage.setItem('unshorten_auth_token', tokenData.access_token);
+      setToken(tokenData.access_token);
+      
+      setAuthUsername('');
+      setAuthPassword('');
+      setAuthMode(null);
+    } catch (err: any) {
+      setAuthError(err.message || 'An error occurred during authentication.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('unshorten_auth_token');
+    setToken(null);
+    setUser(null);
+    const saved = localStorage.getItem('unshorten_history');
+    setHistory(saved ? JSON.parse(saved) : []);
+  };
+
+  const handleClearHistory = async () => {
+    if (token) {
+      try {
+        let apiBaseUrl = (window as any)._env_?.API_BASE_URL || import.meta.env.API_BASE_URL;
+        if (typeof apiBaseUrl === 'string') {
+          apiBaseUrl = apiBaseUrl.replace(/^["']|["']$/g, '');
+        }
+
+        const response = await fetch(`${apiBaseUrl}/api/v1/history/clear`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          setHistory([]);
+          setShowHistory(false);
+        }
+      } catch (err) {
+        console.error("Failed to clear cloud history:", err);
+      }
+    } else {
+      setHistory([]);
+      setShowHistory(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
 
-    // Build absolute URL if user omits schema
     let urlToSubmit = url.trim();
     if (!/^https?:\/\//i.test(urlToSubmit)) {
       urlToSubmit = `https://${urlToSubmit}`;
@@ -71,20 +215,22 @@ function App() {
     setResult(null);
 
     try {
-      // Prioritize runtime injected env var, fallback to Vite env var, then default.
       let apiBaseUrl = (window as any)._env_?.API_BASE_URL || import.meta.env.API_BASE_URL;
-
-      // Clean up any stray string quotes that Docker might have injected
       if (typeof apiBaseUrl === 'string') {
         apiBaseUrl = apiBaseUrl.replace(/^["']|["']$/g, '');
       }
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'X-App-Platform': 'web'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${apiBaseUrl}/api/v1/unshorten`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-App-Platform': 'web'
-        },
+        headers,
         body: JSON.stringify({ url: urlToSubmit }),
       });
 
@@ -116,7 +262,19 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="top-bar">
+      <div className="top-bar" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', alignItems: 'center' }}>
+        {user ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span className="user-badge">Hello, <strong>{user.username}</strong></span>
+            <button className="glass-btn history-toggle-btn" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
+        ) : (
+          <button className="glass-btn history-toggle-btn" onClick={() => setAuthMode('login')}>
+            Sign In / Sign Up
+          </button>
+        )}
         {history.length > 0 && (
           <button
             className="glass-btn history-toggle-btn"
@@ -142,7 +300,7 @@ function App() {
               </div>
               <button
                 className="clear-btn"
-                onClick={() => { setHistory([]); setShowHistory(false); }}
+                onClick={handleClearHistory}
               >
                 <Trash2 size={16} />
                 <span>Clear All</span>
@@ -355,6 +513,78 @@ function App() {
           <a href="https://bitmaskers.in" target="_blank" rel="noopener noreferrer" className="author-link">bitmaskers.in</a>
         </p>
       </footer>
+
+      {authMode && (
+        <div className="modal-overlay" onClick={() => setAuthMode(null)}>
+          <div className="glass-panel modal-content animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <button className="close-btn" onClick={() => setAuthMode(null)}>
+              <X size={20} />
+            </button>
+            <h2 className="result-title text-gradient" style={{ marginTop: 0, marginBottom: '1.5rem', textAlign: 'center' }}>
+              {authMode === 'login' ? 'Sign In' : 'Create Account'}
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', textAlign: 'center', fontSize: '0.95rem', marginBottom: '2rem' }}>
+              {authMode === 'login' 
+                ? 'Sign in to sync your link trace history across all devices.' 
+                : 'Create an account to keep your history synced securely.'}
+            </p>
+            {authError && (
+              <div className="auth-error-box animate-slide-up">
+                <AlertCircle size={18} />
+                <span>{authError}</span>
+              </div>
+            )}
+            <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="input-wrapper">
+                <User className="input-icon" size={20} />
+                <input
+                  type="text"
+                  className="glass-input"
+                  placeholder="Username"
+                  value={authUsername}
+                  onChange={(e) => setAuthUsername(e.target.value)}
+                  required
+                  disabled={authLoading}
+                />
+              </div>
+              <div className="input-wrapper">
+                <Lock className="input-icon" size={20} />
+                <input
+                  type="password"
+                  className="glass-input"
+                  placeholder="Password"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  required
+                  disabled={authLoading}
+                />
+              </div>
+              <button type="submit" className="btn-primary" disabled={authLoading} style={{ width: '100%', marginTop: '0.5rem', justifyContent: 'center' }}>
+                {authLoading ? <span className="spinner"></span> : (
+                  <span>{authMode === 'login' ? 'Sign In' : 'Create Account'}</span>
+                )}
+              </button>
+            </form>
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              {authMode === 'login' ? (
+                <>
+                  Don't have an account?{' '}
+                  <button className="auth-switch-link" onClick={() => { setAuthMode('register'); setAuthError(null); }}>
+                    Sign Up
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{' '}
+                  <button className="auth-switch-link" onClick={() => { setAuthMode('login'); setAuthError(null); }}>
+                    Sign In
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
