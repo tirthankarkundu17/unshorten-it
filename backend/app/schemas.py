@@ -32,13 +32,8 @@ class URLResponse(BaseModel):
     preview: Optional[PagePreview] = None
     security: Optional[SecurityCheck] = None
 
-class UserRegister(BaseModel):
-    username: str
-    password: str
-
-class UserLogin(BaseModel):
-    username: str
-    password: str
+class GoogleLoginRequest(BaseModel):
+    token: str
 
 class UserResponse(BaseModel):
     id: str

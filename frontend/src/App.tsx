@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight, QrCode, X, User, Lock } from 'lucide-react';
+import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight, QrCode, X } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { GoogleLogin } from '@react-oauth/google';
 import './App.css';
 
 interface PagePreview {
@@ -44,9 +45,7 @@ function App() {
   // Auth states
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('unshorten_auth_token'));
   const [user, setUser] = useState<{ id: string; username: string } | null>(null);
-  const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
-  const [authUsername, setAuthUsername] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
+  const [authMode, setAuthMode] = useState<'login' | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
 
@@ -115,8 +114,7 @@ function App() {
     }
   }, [history, token]);
 
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleSuccess = async (credentialResponse: any) => {
     setAuthError(null);
     setAuthLoading(true);
 
@@ -126,40 +124,23 @@ function App() {
     }
 
     try {
-      if (authMode === 'register') {
-        const response = await fetch(`${apiBaseUrl}/api/v1/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: authUsername, password: authPassword }),
-        });
-
-        if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error?.message || 'Registration failed');
-        }
-      }
-
-      // Automatically login
-      const loginResponse = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
+      const response = await fetch(`${apiBaseUrl}/api/v1/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: authUsername, password: authPassword }),
+        body: JSON.stringify({ token: credentialResponse.credential }),
       });
 
-      if (!loginResponse.ok) {
-        const errData = await loginResponse.json();
-        throw new Error(errData.error?.message || 'Login failed');
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error?.message || 'Google authentication failed');
       }
 
-      const tokenData = await loginResponse.json();
+      const tokenData = await response.json();
       localStorage.setItem('unshorten_auth_token', tokenData.access_token);
       setToken(tokenData.access_token);
-      
-      setAuthUsername('');
-      setAuthPassword('');
       setAuthMode(null);
     } catch (err: any) {
-      setAuthError(err.message || 'An error occurred during authentication.');
+      setAuthError(err.message || 'An error occurred during Google authentication.');
     } finally {
       setAuthLoading(false);
     }
@@ -521,65 +502,29 @@ function App() {
               <X size={20} />
             </button>
             <h2 className="result-title text-gradient" style={{ marginTop: 0, marginBottom: '1.5rem', textAlign: 'center' }}>
-              {authMode === 'login' ? 'Sign In' : 'Create Account'}
+              Sign In
             </h2>
             <p style={{ color: 'var(--text-secondary)', textAlign: 'center', fontSize: '0.95rem', marginBottom: '2rem' }}>
-              {authMode === 'login' 
-                ? 'Sign in to sync your link trace history across all devices.' 
-                : 'Create an account to keep your history synced securely.'}
+              Sign in with your Google account to sync your link trace history across all devices.
             </p>
             {authError && (
-              <div className="auth-error-box animate-slide-up">
+              <div className="auth-error-box animate-slide-up" style={{ marginBottom: '1.5rem' }}>
                 <AlertCircle size={18} />
                 <span>{authError}</span>
               </div>
             )}
-            <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div className="input-wrapper">
-                <User className="input-icon" size={20} />
-                <input
-                  type="text"
-                  className="glass-input"
-                  placeholder="Username"
-                  value={authUsername}
-                  onChange={(e) => setAuthUsername(e.target.value)}
-                  required
-                  disabled={authLoading}
+            
+            <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: '1rem', minHeight: '40px' }}>
+              {authLoading ? <span className="spinner"></span> : (
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => {
+                    setAuthError("Google Login was closed or failed.");
+                  }}
+                  theme="filled_blue"
+                  shape="pill"
+                  width="370px"
                 />
-              </div>
-              <div className="input-wrapper">
-                <Lock className="input-icon" size={20} />
-                <input
-                  type="password"
-                  className="glass-input"
-                  placeholder="Password"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  required
-                  disabled={authLoading}
-                />
-              </div>
-              <button type="submit" className="btn-primary" disabled={authLoading} style={{ width: '100%', marginTop: '0.5rem', justifyContent: 'center' }}>
-                {authLoading ? <span className="spinner"></span> : (
-                  <span>{authMode === 'login' ? 'Sign In' : 'Create Account'}</span>
-                )}
-              </button>
-            </form>
-            <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              {authMode === 'login' ? (
-                <>
-                  Don't have an account?{' '}
-                  <button className="auth-switch-link" onClick={() => { setAuthMode('register'); setAuthError(null); }}>
-                    Sign Up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{' '}
-                  <button className="auth-switch-link" onClick={() => { setAuthMode('login'); setAuthError(null); }}>
-                    Sign In
-                  </button>
-                </>
               )}
             </div>
           </div>

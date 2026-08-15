@@ -14,7 +14,7 @@ setup_logging()
 
 from .schemas import (
     URLRequest, URLResponse, ErrorResponse,
-    UserRegister, UserLogin, UserResponse, TokenResponse,
+    GoogleLoginRequest, UserResponse, TokenResponse,
     StatusResponse, HistoryItemResponse
 )
 from .services.url_service import unshorten_url
@@ -27,14 +27,15 @@ __version__ = os.getenv("APP_VERSION", "local-dev")
 
 from contextlib import asynccontextmanager
 import asyncio
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 from .services.cache_service import cache_service
 from .services.tracking_service import tracking_service
 from .services.database_service import db_service
 from .services.security_service import urlhaus_sync_loop
 from .services.rate_limiter_service import rate_limiter
 from .services.auth_service import (
-    get_password_hash, verify_password, create_access_token,
-    get_current_user, get_current_user_optional
+    create_access_token, get_current_user, get_current_user_optional
 )
 from .utils.network import get_client_ip
 
@@ -181,68 +182,17 @@ async def unshorten(
     return result
 
 @app.post(
-    "/api/v1/auth/register",
-    response_model=UserResponse,
-    status_code=201,
-    tags=["Authentication"],
-    responses={
-        400: {"model": ErrorResponse, "description": "Invalid Input or User Already Exists"},
-        500: {"model": ErrorResponse, "description": "Internal Server Error"}
-    }
-)
-async def register(user_data: UserRegister):
-    """
-    Register a new user account.
-    """
-    if db_service.db is None:
-        raise HTTPException(
-            status_code=500,
-            detail={"code": "DATABASE_ERROR", "message": "Database not initialized"}
-        )
-    
-    username = user_data.username.strip()
-    if not username:
-        raise HTTPException(
-            status_code=400,
-            detail={"code": "INVALID_INPUT", "message": "Username cannot be empty"}
-        )
-    
-    if len(user_data.password) < 6:
-        raise HTTPException(
-            status_code=400,
-            detail={"code": "INVALID_INPUT", "message": "Password must be at least 6 characters long"}
-        )
-        
-    # Check if user already exists
-    existing_user = await db_service.db.users.find_one({"username": username})
-    if existing_user:
-        raise HTTPException(
-            status_code=400,
-            detail={"code": "USER_ALREADY_EXISTS", "message": "Username is already taken"}
-        )
-        
-    hashed_password = get_password_hash(user_data.password)
-    user_doc = {
-        "username": username,
-        "hashed_password": hashed_password,
-        "created_at": datetime.now(timezone.utc)
-    }
-    
-    result = await db_service.db.users.insert_one(user_doc)
-    return UserResponse(id=str(result.inserted_id), username=username)
-
-@app.post(
-    "/api/v1/auth/login",
+    "/api/v1/auth/google",
     response_model=TokenResponse,
     tags=["Authentication"],
     responses={
-        401: {"model": ErrorResponse, "description": "Invalid Credentials"},
+        400: {"model": ErrorResponse, "description": "Invalid Google Token"},
         500: {"model": ErrorResponse, "description": "Internal Server Error"}
     }
 )
-async def login(user_data: UserLogin):
+async def google_login(payload: GoogleLoginRequest):
     """
-    Log in an existing user and get a JWT token.
+    Log in using Google SSO.
     """
     if db_service.db is None:
         raise HTTPException(
@@ -250,17 +200,63 @@ async def login(user_data: UserLogin):
             detail={"code": "DATABASE_ERROR", "message": "Database not initialized"}
         )
         
-    username = user_data.username.strip()
-    user = await db_service.db.users.find_one({"username": username})
-    
-    if not user or not verify_password(user_data.password, user["hashed_password"]):
-        raise HTTPException(
-            status_code=401,
-            detail={"code": "INVALID_CREDENTIALS", "message": "Invalid username or password"}
-        )
+    try:
+        # Check if we are running in a test/mock environment
+        if os.getenv("APP_ENV") == "test" and payload.token.startswith("mock-google-token"):
+            username = "testuser"
+            email = "testuser@example.com"
+            google_id = "mock-google-id-123"
+        else:
+            GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+            id_info = id_token.verify_oauth2_token(
+                payload.token,
+                google_requests.Request(),
+                GOOGLE_CLIENT_ID
+            )
+            email = id_info.get("email")
+            google_id = id_info.get("sub")
+            username = email.split("@")[0] if email else "google_user"
+            
+        if not email or not google_id:
+            raise HTTPException(
+                status_code=400,
+                detail={"code": "INVALID_GOOGLE_TOKEN", "message": "Invalid Google token payload"}
+            )
+            
+        # Find or create user
+        user = await db_service.db.users.find_one({"google_id": google_id})
+        if not user:
+            # Check by email in case they existed
+            user = await db_service.db.users.find_one({"email": email})
+            if user:
+                await db_service.db.users.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {"google_id": google_id, "auth_provider": "google"}}
+                )
+            else:
+                user_doc = {
+                    "username": username,
+                    "email": email,
+                    "google_id": google_id,
+                    "auth_provider": "google",
+                    "created_at": datetime.now(timezone.utc)
+                }
+                result = await db_service.db.users.insert_one(user_doc)
+                user = await db_service.db.users.find_one({"_id": result.inserted_id})
+                
+        access_token = create_access_token(data={"sub": user["username"]})
+        return TokenResponse(access_token=access_token)
         
-    access_token = create_access_token(data={"sub": username})
-    return TokenResponse(access_token=access_token)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "INVALID_GOOGLE_TOKEN", "message": f"Token verification failed: {str(e)}"}
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "INTERNAL_SERVER_ERROR", "message": f"Authentication failed: {str(e)}"}
+        )
 
 @app.get(
     "/api/v1/auth/me",

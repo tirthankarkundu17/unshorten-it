@@ -18,6 +18,7 @@ dependencies = [
     "beautifulsoup4>=4.12.3",
     "pyjwt>=2.13.0",
     "bcrypt>=5.0.0",
+    "google-auth>=2.56.3",
 ]
 
 [dependency-groups]
