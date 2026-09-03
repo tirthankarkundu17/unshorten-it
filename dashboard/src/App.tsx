@@ -28,6 +28,7 @@ import {
   UserCheck,
   LogOut,
   User,
+  Download,
 } from 'lucide-react';
 import './App.css';
 
@@ -37,6 +38,25 @@ export const App: React.FC = () => {
   const [adminUsername, setAdminUsername] = useState<string>('admin');
   const [activeTab, setActiveTab] = useState<'overview' | 'visitors'>('overview');
   const [selectedVisitor, setSelectedVisitor] = useState<VisitorItem | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<{ prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> } | null>(null);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as unknown as { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> });
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
 
   useEffect(() => {
     const token = getAuthToken();
@@ -173,6 +193,22 @@ export const App: React.FC = () => {
             >
               <RefreshCw size={16} />
               <span>Refresh</span>
+            </button>
+          )}
+
+          {installPrompt && (
+            <button
+              onClick={handleInstallClick}
+              className="refresh-btn"
+              style={{
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25))',
+                borderColor: 'var(--border-highlight)',
+                color: '#c7d2fe',
+              }}
+              title="Install Admin Dashboard as a Desktop / Mobile PWA App"
+            >
+              <Download size={16} />
+              <span>Install App</span>
             </button>
           )}
 
