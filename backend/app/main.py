@@ -10,8 +10,16 @@ from .utils.logging import setup_logging
 # Initialize logging before other imports
 setup_logging()
 
-from .schemas import URLRequest, URLResponse, ErrorResponse
+from .schemas import (
+    URLRequest,
+    URLResponse,
+    ErrorResponse,
+    AdminDashboardResponse,
+    VisitorListResponse,
+    VisitorRequestsResponse,
+)
 from .services.url_service import unshorten_url
+from .services.analytics_service import analytics_service
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -58,6 +66,10 @@ app = FastAPI(
 # Best practice to add CORS middleware if this will be consumed by a frontend
 allow_origins_str = os.getenv("ALLOW_ORIGINS", "")
 allow_origins_list = [origin.strip() for origin in allow_origins_str.split(",") if origin.strip()]
+# Add default local dev origins if not already present
+for dev_origin in ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"]:
+    if dev_origin not in allow_origins_list:
+        allow_origins_list.append(dev_origin)
 print(allow_origins_list)
 app.add_middleware(
     CORSMiddleware,
@@ -139,3 +151,47 @@ async def unshorten(
         )
         
     return result
+
+@app.get(
+    "/api/v1/admin/analytics/dashboard",
+    response_model=AdminDashboardResponse,
+    tags=["Admin Analytics"],
+    responses={
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    }
+)
+async def get_admin_analytics_dashboard():
+    """
+    Retrieve admin metrics for users, traffic history, geolocations, and request logs.
+    """
+    return await analytics_service.get_admin_dashboard_metrics()
+
+@app.get(
+    "/api/v1/admin/analytics/visitors",
+    response_model=VisitorListResponse,
+    tags=["Admin Analytics"],
+    responses={
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    }
+)
+async def get_admin_analytics_visitors(limit: int = 50, skip: int = 0):
+    """
+    Retrieve list of visitors with geolocation and request counts.
+    """
+    return await analytics_service.get_visitors(limit=limit, skip=skip)
+
+@app.get(
+    "/api/v1/admin/analytics/visitors/{ip:path}/requests",
+    response_model=VisitorRequestsResponse,
+    tags=["Admin Analytics"],
+    responses={
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    }
+)
+async def get_admin_analytics_visitor_requests(ip: str, limit: int = 100):
+    """
+    Retrieve all unshorten URL requests performed by a specific visitor IP.
+    """
+    return await analytics_service.get_visitor_requests(ip=ip, limit=limit)
+
+
