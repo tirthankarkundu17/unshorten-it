@@ -13,7 +13,10 @@ interface UseAdminAnalyticsResult {
   setAutoRefresh: (val: boolean) => void;
 }
 
-export function useAdminAnalytics(refreshIntervalMs = 30000): UseAdminAnalyticsResult {
+export function useAdminAnalytics(
+  enabled = true,
+  refreshIntervalMs = 30000
+): UseAdminAnalyticsResult {
   const [data, setData] = useState<AdminDashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
@@ -23,6 +26,8 @@ export function useAdminAnalytics(refreshIntervalMs = 30000): UseAdminAnalyticsR
   const isMountedRef = useRef<boolean>(true);
 
   const loadData = useCallback(async (isInitial = false) => {
+    if (!enabled) return;
+
     if (isInitial) {
       setIsLoading(true);
     } else {
@@ -47,7 +52,7 @@ export function useAdminAnalytics(refreshIntervalMs = 30000): UseAdminAnalyticsR
         setIsRefreshing(false);
       }
     }
-  }, []);
+  }, [enabled]);
 
   const refetch = useCallback(async () => {
     await loadData(false);
@@ -55,22 +60,24 @@ export function useAdminAnalytics(refreshIntervalMs = 30000): UseAdminAnalyticsR
 
   useEffect(() => {
     isMountedRef.current = true;
-    loadData(true);
+    if (enabled) {
+      loadData(true);
+    }
 
     return () => {
       isMountedRef.current = false;
     };
-  }, [loadData]);
+  }, [enabled, loadData]);
 
   useEffect(() => {
-    if (!autoRefresh) return;
+    if (!enabled || !autoRefresh) return;
 
     const intervalId = setInterval(() => {
       loadData(false);
     }, refreshIntervalMs);
 
     return () => clearInterval(intervalId);
-  }, [autoRefresh, refreshIntervalMs, loadData]);
+  }, [enabled, autoRefresh, refreshIntervalMs, loadData]);
 
   return {
     data,

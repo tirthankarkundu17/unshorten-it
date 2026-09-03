@@ -69,3 +69,20 @@ export interface VisitorRequestsResponse {
   requests: VisitorRequestDetail[];
 }
 
+export interface AdminLoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface AdminLoginResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+export interface AdminUserResponse {
+  username: string;
+  authenticated: boolean;
+}
+
+

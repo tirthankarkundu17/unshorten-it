@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdminAnalytics } from './hooks/useAdminAnalytics';
 import { MetricCard } from './components/MetricCard';
 import { TrafficChart } from './components/TrafficChart';
@@ -7,6 +7,12 @@ import { PlatformBreakdown } from './components/PlatformBreakdown';
 import { RecentLogsTable } from './components/RecentLogsTable';
 import { VisitorExplorer } from './components/VisitorExplorer';
 import { VisitorDetailModal } from './components/VisitorDetailModal';
+import { LoginScreen } from './components/LoginScreen';
+import {
+  getAuthToken,
+  clearAuthToken,
+  verifyAdminSession,
+} from './api/adminApi';
 import type { VisitorItem } from './types/analytics';
 import {
   Activity,
@@ -20,12 +26,38 @@ import {
   Database,
   LayoutDashboard,
   UserCheck,
+  LogOut,
+  User,
 } from 'lucide-react';
 import './App.css';
 
 export const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => Boolean(getAuthToken()));
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+  const [adminUsername, setAdminUsername] = useState<string>('admin');
   const [activeTab, setActiveTab] = useState<'overview' | 'visitors'>('overview');
   const [selectedVisitor, setSelectedVisitor] = useState<VisitorItem | null>(null);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token) {
+      setIsAuthenticated(false);
+      setIsCheckingAuth(false);
+      return;
+    }
+
+    verifyAdminSession()
+      .then((user) => {
+        setIsAuthenticated(true);
+        setAdminUsername(user.username);
+      })
+      .catch(() => {
+        setIsAuthenticated(false);
+      })
+      .finally(() => {
+        setIsCheckingAuth(false);
+      });
+  }, []);
 
   const {
     data,
@@ -36,7 +68,39 @@ export const App: React.FC = () => {
     refetch,
     autoRefresh,
     setAutoRefresh,
-  } = useAdminAnalytics(30000);
+  } = useAdminAnalytics(isAuthenticated, 30000);
+
+  // Catch unauthenticated API errors and redirect to login
+  useEffect(() => {
+    if (error && (error.includes('401') || error.toLowerCase().includes('unauthorized') || error.toLowerCase().includes('expired'))) {
+      clearAuthToken();
+      setIsAuthenticated(false);
+    }
+  }, [error]);
+
+  const handleLogout = () => {
+    clearAuthToken();
+    setIsAuthenticated(false);
+  };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="login-wrapper">
+        <div className="loading-spinner" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <LoginScreen
+        onLoginSuccess={(user) => {
+          setAdminUsername(user);
+          setIsAuthenticated(true);
+        }}
+      />
+    );
+  }
 
   const topLocation = data?.top_locations && data.top_locations.length > 0
     ? `${data.top_locations[0].country}${data.top_locations[0].city ? ` (${data.top_locations[0].city})` : ''}`
@@ -111,6 +175,20 @@ export const App: React.FC = () => {
               <span>Refresh</span>
             </button>
           )}
+
+          <div className="admin-user-pill">
+            <User size={14} color="var(--accent-cyan)" />
+            <span>{adminUsername}</span>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="logout-btn"
+            title="Log out of admin console"
+          >
+            <LogOut size={16} />
+            <span>Logout</span>
+          </button>
         </div>
       </header>
 

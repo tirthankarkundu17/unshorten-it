@@ -92,3 +92,17 @@ class VisitorRequestsResponse(BaseModel):
     total_requests: int
     requests: List[VisitorRequestDetail]
 
+class AdminLoginRequest(BaseModel):
+    username: str
+    password: str
+
+class AdminLoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+class AdminUserResponse(BaseModel):
+    username: str
+    authenticated: bool
+
+

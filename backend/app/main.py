@@ -17,9 +17,13 @@ from .schemas import (
     AdminDashboardResponse,
     VisitorListResponse,
     VisitorRequestsResponse,
+    AdminLoginRequest,
+    AdminLoginResponse,
+    AdminUserResponse,
 )
 from .services.url_service import unshorten_url
 from .services.analytics_service import analytics_service
+from .services.auth_service import auth_service, verify_admin_token
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -152,15 +156,52 @@ async def unshorten(
         
     return result
 
+@app.post(
+    "/api/v1/admin/login",
+    response_model=AdminLoginResponse,
+    tags=["Admin Authentication"],
+    responses={
+        401: {"model": ErrorResponse, "description": "Invalid credentials"}
+    }
+)
+async def admin_login(creds: AdminLoginRequest):
+    """
+    Authenticate admin credentials and issue a signed Bearer token.
+    """
+    if not auth_service.authenticate_admin(creds.username, creds.password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    token = auth_service.create_access_token(creds.username)
+    return AdminLoginResponse(
+        access_token=token,
+        token_type="bearer",
+        expires_in=86400,
+    )
+
+@app.get(
+    "/api/v1/admin/me",
+    response_model=AdminUserResponse,
+    tags=["Admin Authentication"],
+    responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"}
+    }
+)
+async def admin_me(username: str = Depends(verify_admin_token)):
+    """
+    Verify current admin authentication status.
+    """
+    return AdminUserResponse(username=username, authenticated=True)
+
 @app.get(
     "/api/v1/admin/analytics/dashboard",
     response_model=AdminDashboardResponse,
     tags=["Admin Analytics"],
     responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         500: {"model": ErrorResponse, "description": "Internal Server Error"}
     }
 )
-async def get_admin_analytics_dashboard():
+async def get_admin_analytics_dashboard(_: str = Depends(verify_admin_token)):
     """
     Retrieve admin metrics for users, traffic history, geolocations, and request logs.
     """
@@ -171,10 +212,15 @@ async def get_admin_analytics_dashboard():
     response_model=VisitorListResponse,
     tags=["Admin Analytics"],
     responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         500: {"model": ErrorResponse, "description": "Internal Server Error"}
     }
 )
-async def get_admin_analytics_visitors(limit: int = 50, skip: int = 0):
+async def get_admin_analytics_visitors(
+    limit: int = 50,
+    skip: int = 0,
+    _: str = Depends(verify_admin_token)
+):
     """
     Retrieve list of visitors with geolocation and request counts.
     """
@@ -185,13 +231,19 @@ async def get_admin_analytics_visitors(limit: int = 50, skip: int = 0):
     response_model=VisitorRequestsResponse,
     tags=["Admin Analytics"],
     responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
         500: {"model": ErrorResponse, "description": "Internal Server Error"}
     }
 )
-async def get_admin_analytics_visitor_requests(ip: str, limit: int = 100):
+async def get_admin_analytics_visitor_requests(
+    ip: str,
+    limit: int = 100,
+    _: str = Depends(verify_admin_token)
+):
     """
     Retrieve all unshorten URL requests performed by a specific visitor IP.
     """
     return await analytics_service.get_visitor_requests(ip=ip, limit=limit)
+
 
 
