@@ -8,6 +8,8 @@ import { RecentLogsTable } from './components/RecentLogsTable';
 import { VisitorExplorer } from './components/VisitorExplorer';
 import { VisitorDetailModal } from './components/VisitorDetailModal';
 import { LoginScreen } from './components/LoginScreen';
+import { ThemeSelector } from './components/ThemeSelector';
+import { useTheme } from './hooks/useTheme';
 import {
   getAuthToken,
   clearAuthToken,
@@ -39,6 +41,7 @@ export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'visitors'>('overview');
   const [selectedVisitor, setSelectedVisitor] = useState<VisitorItem | null>(null);
   const [installPrompt, setInstallPrompt] = useState<{ prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> } | null>(null);
+  const { themePreference, setTheme } = useTheme();
 
   useEffect(() => {
     const handleBeforeInstall = (e: Event) => {
@@ -118,6 +121,8 @@ export const App: React.FC = () => {
           setAdminUsername(user);
           setIsAuthenticated(true);
         }}
+        currentTheme={themePreference}
+        onThemeChange={setTheme}
       />
     );
   }
@@ -211,6 +216,8 @@ export const App: React.FC = () => {
               <span>Install App</span>
             </button>
           )}
+
+          <ThemeSelector currentTheme={themePreference} onThemeChange={setTheme} />
 
           <div className="admin-user-pill">
             <User size={14} color="var(--accent-cyan)" />

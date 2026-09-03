@@ -9,12 +9,20 @@ import {
   ArrowRight,
   AlertTriangle,
 } from 'lucide-react';
+import type { ThemePreference } from '../hooks/useTheme';
+import { ThemeSelector } from './ThemeSelector';
 
 interface LoginScreenProps {
   onLoginSuccess: (username: string) => void;
+  currentTheme?: ThemePreference;
+  onThemeChange?: (theme: ThemePreference) => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({
+  onLoginSuccess,
+  currentTheme,
+  onThemeChange,
+}) => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -46,6 +54,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
   return (
     <div className="login-wrapper">
+      {currentTheme && onThemeChange && (
+        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10 }}>
+          <ThemeSelector currentTheme={currentTheme} onThemeChange={onThemeChange} />
+        </div>
+      )}
       <div className="login-card animate-fade-in">
         {/* Brand & Icon */}
         <div className="login-header">

@@ -171,6 +171,47 @@
   animation: spin 0.8s linear infinite;
 }
 
+/* Theme Selector */
+.theme-selector-container {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 3px;
+}
+
+.theme-selector-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.theme-selector-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .theme-selector-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.theme-selector-btn.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
+  color: var(--accent-primary);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  border-color: var(--border-highlight);
+}
+
 /* Dashboard Grid Layout */
 .dashboard-grid {
   display: flex;
@@ -389,7 +430,7 @@
 }
 
 .modal-content {
-  background: #0f141f;
+  background: var(--bg-modal);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
   width: 100%;
@@ -645,12 +686,12 @@
 .login-card {
   width: 100%;
   max-width: 440px;
-  background: rgba(15, 20, 31, 0.8);
+  background: var(--bg-card);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
   padding: 2.5rem;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85);
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
@@ -723,7 +764,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-input);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 0.65rem 0.85rem;
