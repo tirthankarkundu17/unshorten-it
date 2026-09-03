@@ -47,6 +47,7 @@ async def lifespan(app: FastAPI):
     # Initialize cache and DB settings now that .env is loaded
     cache_service.initialize()
     db_service.initialize()
+    await db_service.create_indexes()
     
     # Start the background sync loop for URLhaus
     sync_task = asyncio.create_task(urlhaus_sync_loop())
