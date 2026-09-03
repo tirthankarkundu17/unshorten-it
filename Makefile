@@ -1,4 +1,4 @@
-.PHONY: install run dev clean docker-build docker-run
+.PHONY: install run dev clean docker-build docker-run install-frontend run-frontend build-frontend install-dashboard run-dashboard build-dashboard preview-dashboard test-backend
 
 # Run the FastAPI server in development mode with live reloading
 run-backend:
@@ -11,6 +11,29 @@ install-frontend:
 # Run the frontend application
 run-frontend:
 	cd frontend && npm run dev
+
+# Build the frontend application for production
+build-frontend:
+	cd frontend && npm run build
+
+# Install dashboard dependencies
+install-dashboard:
+	cd dashboard && npm install
+
+# Run the dashboard application
+run-dashboard:
+	cd dashboard && npm run dev
+
+# API Base URL for dashboard (override via: make build-dashboard VITE_API_BASE_URL=https://api.example.com)
+VITE_API_BASE_URL ?=
+
+# Build the dashboard for production
+build-dashboard:
+	cd dashboard && npx --yes cross-env VITE_API_BASE_URL="$(VITE_API_BASE_URL)" npm run build
+
+# Preview the dashboard production build
+preview-dashboard:
+	cd dashboard && npm run preview
 
 # Run both backend and frontend in parallel
 run:
