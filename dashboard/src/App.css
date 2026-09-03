@@ -808,4 +808,74 @@
   color: var(--text-muted);
 }
 
+/* ==========================================================================
+   Responsive Adaptations for Tablets & Mobile Viewports
+   ========================================================================== */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1rem 1rem 2.5rem 1rem;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .controls-section {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .modal-backdrop {
+    padding: 0.75rem;
+  }
+
+  .modal-header {
+    padding: 1.25rem;
+  }
+
+  .modal-content {
+    max-height: 92vh;
+  }
+
+  .visitor-meta-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-container {
+    padding: 0.75rem 0.75rem 2rem 0.75rem;
+  }
+
+  .brand-title {
+    font-size: 1.25rem;
+  }
+
+  .login-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .nav-tabs-container {
+    width: 100%;
+  }
+
+  .nav-tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .search-input-wrapper {
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+}
+
 
