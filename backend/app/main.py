@@ -4,14 +4,28 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import os
+import logging
 from pathlib import Path
 from .utils.logging import setup_logging
 
 # Initialize logging before other imports
 setup_logging()
+logger = logging.getLogger(__name__)
 
-from .schemas import URLRequest, URLResponse, ErrorResponse
+from .schemas import (
+    URLRequest,
+    URLResponse,
+    ErrorResponse,
+    AdminDashboardResponse,
+    VisitorListResponse,
+    VisitorRequestsResponse,
+    AdminLoginRequest,
+    AdminLoginResponse,
+    AdminUserResponse,
+)
 from .services.url_service import unshorten_url
+from .services.analytics_service import analytics_service
+from .services.auth_service import auth_service, verify_admin_token
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,6 +47,7 @@ async def lifespan(app: FastAPI):
     # Initialize cache and DB settings now that .env is loaded
     cache_service.initialize()
     db_service.initialize()
+    await db_service.create_indexes()
     
     # Start the background sync loop for URLhaus
     sync_task = asyncio.create_task(urlhaus_sync_loop())
@@ -58,7 +73,11 @@ app = FastAPI(
 # Best practice to add CORS middleware if this will be consumed by a frontend
 allow_origins_str = os.getenv("ALLOW_ORIGINS", "")
 allow_origins_list = [origin.strip() for origin in allow_origins_str.split(",") if origin.strip()]
-print(allow_origins_list)
+# Add default local dev origins if not already present
+for dev_origin in ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"]:
+    if dev_origin not in allow_origins_list:
+        allow_origins_list.append(dev_origin)
+logger.info(f"Configured CORS allowed origins: {allow_origins_list}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins_list,
@@ -139,3 +158,99 @@ async def unshorten(
         )
         
     return result
+
+@app.post(
+    "/api/v1/admin/login",
+    response_model=AdminLoginResponse,
+    tags=["Admin Authentication"],
+    responses={
+        401: {"model": ErrorResponse, "description": "Invalid credentials"},
+        429: {"model": ErrorResponse, "description": "Too Many Requests"},
+    }
+)
+async def admin_login(
+    creds: AdminLoginRequest,
+    _ = Depends(rate_limiter.check_login_rate_limit),
+):
+    """
+    Authenticate admin credentials and issue a signed Bearer token.
+    """
+    if not auth_service.authenticate_admin(creds.username, creds.password):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    token = auth_service.create_access_token(creds.username)
+    return AdminLoginResponse(
+        access_token=token,
+        token_type="bearer",
+        expires_in=86400,
+    )
+
+@app.get(
+    "/api/v1/admin/me",
+    response_model=AdminUserResponse,
+    tags=["Admin Authentication"],
+    responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"}
+    }
+)
+async def admin_me(username: str = Depends(verify_admin_token)):
+    """
+    Verify current admin authentication status.
+    """
+    return AdminUserResponse(username=username, authenticated=True)
+
+@app.get(
+    "/api/v1/admin/analytics/dashboard",
+    response_model=AdminDashboardResponse,
+    tags=["Admin Analytics"],
+    responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    }
+)
+async def get_admin_analytics_dashboard(_: str = Depends(verify_admin_token)):
+    """
+    Retrieve admin metrics for users, traffic history, geolocations, and request logs.
+    """
+    return await analytics_service.get_admin_dashboard_metrics()
+
+@app.get(
+    "/api/v1/admin/analytics/visitors",
+    response_model=VisitorListResponse,
+    tags=["Admin Analytics"],
+    responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    }
+)
+async def get_admin_analytics_visitors(
+    limit: int = 50,
+    skip: int = 0,
+    _: str = Depends(verify_admin_token)
+):
+    """
+    Retrieve list of visitors with geolocation and request counts.
+    """
+    return await analytics_service.get_visitors(limit=limit, skip=skip)
+
+@app.get(
+    "/api/v1/admin/analytics/visitors/{ip:path}/requests",
+    response_model=VisitorRequestsResponse,
+    tags=["Admin Analytics"],
+    responses={
+        401: {"model": ErrorResponse, "description": "Unauthorized"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"}
+    }
+)
+async def get_admin_analytics_visitor_requests(
+    ip: str,
+    limit: int = 100,
+    _: str = Depends(verify_admin_token)
+):
+    """
+    Retrieve all unshorten URL requests performed by a specific visitor IP.
+    """
+    return await analytics_service.get_visitor_requests(ip=ip, limit=limit)
+
+
+
