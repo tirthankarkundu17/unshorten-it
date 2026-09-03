@@ -2,7 +2,7 @@
 
 # Run the FastAPI server in development mode with live reloading
 run-backend:
-	cd backend && uv run fastapi dev app/main.py --port 8000
+	cd backend && uv run python -m uvicorn app.main:app --reload --port 8000
 
 # Install frontend dependencies
 install-frontend:
