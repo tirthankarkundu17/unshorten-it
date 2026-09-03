@@ -46,3 +46,25 @@ async def test_rate_limiting_exceeded(async_client: AsyncClient):
         data = response.json()
         assert "Too many requests" in data["error"]["message"]
         mock_increment.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_admin_login_rate_limiting_exceeded(async_client: AsyncClient):
+    """
+    Test that admin login requests exceeding the login rate limit return HTTP 429.
+    """
+    with patch("app.services.rate_limiter_service.cache_service.increment", new_callable=AsyncMock) as mock_increment:
+        # Mock exceeding login rate limit
+        mock_increment.return_value = 11
+
+        response = await async_client.post(
+            "/api/v1/admin/login",
+            json={"username": "admin", "password": "anypassword"}
+        )
+
+        assert response.status_code == 429
+        data = response.json()
+        assert "error" in data
+        assert "Too many requests" in data["error"]["message"]
+        # Verify key used was rl:login prefix
+        assert mock_increment.call_args[0][0].startswith("rl:login:")

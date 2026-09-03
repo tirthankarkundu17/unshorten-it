@@ -4,11 +4,13 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import os
+import logging
 from pathlib import Path
 from .utils.logging import setup_logging
 
 # Initialize logging before other imports
 setup_logging()
+logger = logging.getLogger(__name__)
 
 from .schemas import (
     URLRequest,
@@ -74,7 +76,7 @@ allow_origins_list = [origin.strip() for origin in allow_origins_str.split(",") 
 for dev_origin in ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"]:
     if dev_origin not in allow_origins_list:
         allow_origins_list.append(dev_origin)
-print(allow_origins_list)
+logger.info(f"Configured CORS allowed origins: {allow_origins_list}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins_list,
@@ -161,10 +163,14 @@ async def unshorten(
     response_model=AdminLoginResponse,
     tags=["Admin Authentication"],
     responses={
-        401: {"model": ErrorResponse, "description": "Invalid credentials"}
+        401: {"model": ErrorResponse, "description": "Invalid credentials"},
+        429: {"model": ErrorResponse, "description": "Too Many Requests"},
     }
 )
-async def admin_login(creds: AdminLoginRequest):
+async def admin_login(
+    creds: AdminLoginRequest,
+    _ = Depends(rate_limiter.check_login_rate_limit),
+):
     """
     Authenticate admin credentials and issue a signed Bearer token.
     """
