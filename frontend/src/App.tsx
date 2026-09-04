@@ -72,7 +72,7 @@ function App() {
 
     try {
       // Prioritize runtime injected env var, fallback to Vite env var, then default.
-      let apiBaseUrl = (window as any)._env_?.API_BASE_URL || import.meta.env.API_BASE_URL;
+      let apiBaseUrl = window._env_?.API_BASE_URL || import.meta.env.VITE_API_BASE_URL || import.meta.env.API_BASE_URL || '';
 
       // Clean up any stray string quotes that Docker might have injected
       if (typeof apiBaseUrl === 'string') {
@@ -100,8 +100,9 @@ function App() {
         const newHistory = [{ ...data, timestamp: Date.now() }, ...prev.filter(h => h.original_url !== data.original_url)];
         return newHistory.slice(0, 20); // Keep last 20
       });
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -235,8 +236,9 @@ function App() {
                         setShowScanner(false);
                       }
                     }}
-                    onError={(error: any) => {
-                      setScannerError(error?.message || 'Failed to start camera.');
+                    onError={(error: unknown) => {
+                      const message = error instanceof Error ? error.message : (typeof error === 'string' ? error : 'Failed to start camera.');
+                      setScannerError(message);
                     }}
                   />
                 </div>

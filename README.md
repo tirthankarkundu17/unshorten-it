@@ -1,5 +1,6 @@
 # unshorten-it
 [![Docker Build and Push](https://github.com/tirthankarkundu17/unshorten-it/actions/workflows/docker-build-push.yml/badge.svg)](https://github.com/tirthankarkundu17/unshorten-it/actions/workflows/docker-build-push.yml)
+[![Deploy Frontend to GitHub Pages](https://github.com/tirthankarkundu17/unshorten-it/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/tirthankarkundu17/unshorten-it/actions/workflows/deploy-pages.yml)
 **unshorten-it** is a simple and fast Python FastAPI application that takes a shortened URL as input and follows its redirect chain. It returns a JSON object containing the original URL, the final destination URL, all intermediate redirects, and the total response time.
 
 ![Unshorten It Demo](docs/recording.gif)
@@ -132,6 +133,24 @@ The backend supports a Hybrid Caching approach out of the box to maximize perfor
 - **Method:** `GET`
 
 Returns the health status of the application.
+
+## GitHub Pages Web Deployment
+
+The frontend Progressive Web App is configured for automated deployment to GitHub Pages via GitHub Actions workflow [deploy-pages.yml](.github/workflows/deploy-pages.yml).
+
+### Enabling GitHub Pages in Repository Settings
+
+1. In your GitHub repository, go to **Settings** → **Pages**.
+2. Under **Build and deployment** > **Source**, select **GitHub Actions**.
+3. Pushes to `main` impacting `frontend/` will automatically build and deploy the web app to `https://<username>.github.io/<repo>/`.
+
+### Configuring the Backend API Endpoint
+
+Because GitHub Pages serves over HTTPS, browsers enforce Mixed Content security:
+1. Navigate to **Settings** → **Secrets and variables** → **Actions** → **Variables**.
+2. Add a new variable `VITE_API_BASE_URL` with your production API URL (e.g. `https://api.yourdomain.com`).
+3. You can also trigger manual deployments anytime via the **Actions** tab using the `workflow_dispatch` button with an optional API base URL parameter.
+
 
 ## Project Structure
 
