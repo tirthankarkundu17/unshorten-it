@@ -69,7 +69,7 @@ jobs:
       - name: Build frontend for GitHub Pages
         working-directory: frontend
         env:
-          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || '/unshorten-it/' }}
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || './' }}
           VITE_API_BASE_URL: ${{ inputs.api_base_url || vars.VITE_API_BASE_URL || secrets.VITE_API_BASE_URL }}
         run: npm run build
 
