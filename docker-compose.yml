@@ -19,6 +19,7 @@ services:
       - ADMIN_SECRET_KEY=${ADMIN_SECRET_KEY:-default_secret_key_change_in_production_12345}
       - MONGODB_URI=${MONGODB_URI:-}
       - MONGODB_DATABASE=${MONGODB_DATABASE:-unshorten_it}
+      - URLHAUS_FEED_ENABLED=${URLHAUS_FEED_ENABLED:-true}
 
   frontend:
     build:

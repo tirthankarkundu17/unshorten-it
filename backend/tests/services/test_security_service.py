@@ -102,3 +102,44 @@ async def test_check_url_security_no_match():
         mock_collection.find_one.assert_called_once()
         assert result == {"is_safe": True, "threat_type": None}
         mock_set_json.assert_called_once_with(f"threat:{url}", result, expire=3600)
+
+
+def test_is_urlhaus_feed_enabled_default():
+    from app.services.security_service import is_urlhaus_feed_enabled
+    with patch.dict("os.environ", {}, clear=True):
+        assert is_urlhaus_feed_enabled() is True
+
+
+def test_is_urlhaus_feed_enabled_explicit():
+    from app.services.security_service import is_urlhaus_feed_enabled
+    with patch.dict("os.environ", {"URLHAUS_FEED_ENABLED": "false"}):
+        assert is_urlhaus_feed_enabled() is False
+    with patch.dict("os.environ", {"URLHAUS_FEED_ENABLED": "true"}):
+        assert is_urlhaus_feed_enabled() is True
+    with patch.dict("os.environ", {"URLHAUS_FEED_ENABLED": "0"}):
+        assert is_urlhaus_feed_enabled() is False
+    with patch.dict("os.environ", {"URLHAUS_FEED_ENABLED": "1"}):
+        assert is_urlhaus_feed_enabled() is True
+
+
+def test_is_urlhaus_feed_enabled_fallback_urlhaus_enabled():
+    from app.services.security_service import is_urlhaus_feed_enabled
+    with patch.dict("os.environ", {"URLHAUS_ENABLED": "false"}, clear=True):
+        assert is_urlhaus_feed_enabled() is False
+    with patch.dict("os.environ", {"URLHAUS_ENABLED": "true"}, clear=True):
+        assert is_urlhaus_feed_enabled() is True
+
+
+@pytest.mark.asyncio
+async def test_sync_urlhaus_feed_when_disabled():
+    from app.services.security_service import sync_urlhaus_feed
+    with patch.dict("os.environ", {"URLHAUS_FEED_ENABLED": "false"}):
+        with patch("app.services.security_service.db_service") as mock_db, \
+             patch("httpx.AsyncClient") as mock_client:
+            await sync_urlhaus_feed()
+            # Database and network should not be touched
+            mock_client.assert_not_called()
+            mock_db.db.assert_not_called()
+            assert not mock_db.mock_calls
+
+
