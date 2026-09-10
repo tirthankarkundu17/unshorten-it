@@ -59,8 +59,14 @@ ENV URLHAUS_FEED_ENABLED=$URLHAUS_FEED_ENABLED
 ARG URLHAUS_BACKFILL="false"
 ENV URLHAUS_BACKFILL=$URLHAUS_BACKFILL
 
-# Expose the application port
+# Default port if PORT is not set by the container runtime (e.g. Cloud Run provides PORT=8080)
+ENV PORT=8000
 EXPOSE 8000
 
-# Command to run the application using the FastAPI CLI
-CMD ["fastapi", "run", "--workers", "3", "app/main.py", "--port", "8000"]
+# Production CMD using uvicorn:
+# - 'exec' replaces the shell with uvicorn so it runs as PID 1 (graceful SIGTERM shutdown)
+# - Dynamically respects $PORT provided by Cloud Run / container runtime (fallback to 8000)
+# - --workers 1 prevents duplicate background tasks (URLhaus sync) per container instance
+# - --proxy-headers & --forwarded-allow-ips='*' trust Cloud Run's reverse proxy for client IP resolution
+# - --timeout-keep-alive 65 prevents intermittent 502 errors behind GCP load balancers
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --proxy-headers --forwarded-allow-ips='*' --timeout-keep-alive 65"]
