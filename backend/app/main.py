@@ -38,7 +38,7 @@ import asyncio
 from .services.cache_service import cache_service
 from .services.tracking_service import tracking_service
 from .services.database_service import db_service
-from .services.security_service import urlhaus_sync_loop
+from .services.security_service import urlhaus_sync_loop, is_urlhaus_feed_enabled
 from .services.rate_limiter_service import rate_limiter
 from .utils.network import get_client_ip
 
@@ -49,16 +49,21 @@ async def lifespan(app: FastAPI):
     db_service.initialize()
     await db_service.create_indexes()
     
-    # Start the background sync loop for URLhaus
-    sync_task = asyncio.create_task(urlhaus_sync_loop())
+    # Start the background sync loop for URLhaus if enabled
+    sync_task = None
+    if is_urlhaus_feed_enabled():
+        sync_task = asyncio.create_task(urlhaus_sync_loop())
+    else:
+        logger.info("URLhaus feed sync is disabled; skipping background sync task.")
     
     yield
     # Clean up connections on shutdown
-    sync_task.cancel()
-    try:
-        await sync_task
-    except asyncio.CancelledError:
-        pass
+    if sync_task:
+        sync_task.cancel()
+        try:
+            await sync_task
+        except asyncio.CancelledError:
+            pass
         
     await cache_service.close()
     await db_service.close()

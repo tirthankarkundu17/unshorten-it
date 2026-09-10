@@ -30,3 +30,23 @@ async def test_unshorten_bad_url_xss(async_client: AsyncClient):
     assert data["error"]["code"] == "VALIDATION_ERROR"
     assert "Invalid request payload" in data["error"]["message"]
 
+
+@pytest.mark.asyncio
+async def test_lifespan_urlhaus_feed_disabled():
+    from unittest.mock import patch, AsyncMock
+    from app.main import lifespan, app
+
+    with patch.dict("os.environ", {"URLHAUS_FEED_ENABLED": "false"}), \
+         patch("app.main.cache_service") as mock_cache, \
+         patch("app.main.db_service") as mock_db, \
+         patch("asyncio.create_task") as mock_create_task:
+        mock_db.create_indexes = AsyncMock()
+        mock_cache.close = AsyncMock()
+        mock_db.close = AsyncMock()
+
+        async with lifespan(app):
+            pass
+
+        mock_create_task.assert_not_called()
+
+

@@ -19,8 +19,19 @@ URLHAUS_ZIP_URL = "https://urlhaus.abuse.ch/downloads/csv/"
 URLHAUS_RECENT_CSV_URL = "https://urlhaus.abuse.ch/downloads/csv_recent/"
 SYNC_INTERVAL_SECONDS = int(os.environ.get('SYNC_INTERVAL_SECONDS', 3600))  # default to 1 hour if not set
 
+
+def is_urlhaus_feed_enabled() -> bool:
+    """Check whether URLhaus threat feed download and sync is enabled."""
+    val = os.getenv("URLHAUS_FEED_ENABLED", os.getenv("URLHAUS_ENABLED", "true")).strip().lower()
+    return val in ("true", "1", "yes", "t", "on")
+
+
 async def sync_urlhaus_feed():
     """Background task to download and sync URLhaus CSV zip to MongoDB"""
+    if not is_urlhaus_feed_enabled():
+        logger.info("URLhaus feed sync is disabled via configuration.")
+        return
+
     if db_service.db is None:
         logger.warning("DB not initialized, skipping URLhaus sync")
         return
