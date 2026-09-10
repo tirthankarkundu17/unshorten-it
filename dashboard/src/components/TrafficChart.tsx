@@ -27,7 +27,10 @@ export const TrafficChart: React.FC<TrafficChartProps> = ({ history }) => {
     );
   }
 
-  const maxRequests = Math.max(...history.map((d) => d.requests), 1);
+  const maxVal = Math.max(
+    ...history.map((d) => Math.max(d.requests, d.unique_visitors)),
+    1
+  );
 
   return (
     <div
@@ -78,7 +81,9 @@ export const TrafficChart: React.FC<TrafficChartProps> = ({ history }) => {
         }}
       >
         {history.map((day, idx) => {
-          const heightPercent = Math.max(8, (day.requests / maxRequests) * 100);
+          const reqPercent = day.requests > 0 ? Math.max(8, (day.requests / maxVal) * 100) : 0;
+          const visPercent = day.unique_visitors > 0 ? Math.max(8, (day.unique_visitors / maxVal) * 100) : 0;
+          const maxGroupHeight = Math.max(reqPercent, visPercent);
           const isHovered = hoveredIdx === idx;
 
           return (
@@ -89,12 +94,13 @@ export const TrafficChart: React.FC<TrafficChartProps> = ({ history }) => {
               style={{
                 flex: 1,
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                gap: '3px',
                 height: '100%',
-                justifyContent: 'flex-end',
                 position: 'relative',
                 cursor: 'pointer',
+                padding: '0 1px',
               }}
             >
               {/* Tooltip */}
@@ -102,45 +108,62 @@ export const TrafficChart: React.FC<TrafficChartProps> = ({ history }) => {
                 <div
                   style={{
                     position: 'absolute',
-                    bottom: `${heightPercent + 12}%`,
+                    bottom: `${Math.min(maxGroupHeight + 14, 110)}%`,
                     left: '50%',
                     transform: 'translateX(-50%)',
-                    background: '#182030',
+                    background: 'var(--bg-modal)',
                     border: '1px solid var(--border-highlight)',
                     borderRadius: 'var(--radius-sm)',
                     padding: '0.5rem 0.75rem',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.6)',
+                    boxShadow: 'var(--shadow-card)',
                     zIndex: 20,
                     whiteSpace: 'nowrap',
                     pointerEvents: 'none',
                   }}
                   className="animate-fade-in"
                 >
-                  <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>
+                  <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: 3 }}>
                     {day.date}
                   </p>
                   <p style={{ fontSize: '0.75rem', color: '#818cf8', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Activity size={12} /> {day.requests.toLocaleString()} requests
                   </p>
-                  <p style={{ fontSize: '0.75rem', color: '#22d3ee', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <p style={{ fontSize: '0.75rem', color: '#06b6d4', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Users size={12} /> {day.unique_visitors.toLocaleString()} unique visitors
                   </p>
                 </div>
               )}
 
-              {/* Bar */}
+              {/* Bar 1: Requests */}
               <div
                 style={{
-                  width: '100%',
-                  maxWidth: 28,
-                  height: `${heightPercent}%`,
+                  width: '50%',
+                  maxWidth: 16,
+                  height: `${reqPercent}%`,
                   background: isHovered
                     ? 'linear-gradient(180deg, #a78bfa 0%, #6366f1 100%)'
                     : 'linear-gradient(180deg, #818cf8 0%, #4f46e5 100%)',
-                  borderRadius: '4px 4px 0 0',
-                  boxShadow: isHovered ? '0 0 16px rgba(99, 102, 241, 0.6)' : 'none',
+                  borderRadius: '3px 3px 0 0',
+                  boxShadow: isHovered ? '0 0 12px rgba(99, 102, 241, 0.5)' : 'none',
                   transition: 'var(--transition-smooth)',
                 }}
+                title={`${day.requests} requests`}
+              />
+
+              {/* Bar 2: Unique Visitors */}
+              <div
+                style={{
+                  width: '50%',
+                  maxWidth: 16,
+                  height: `${visPercent}%`,
+                  background: isHovered
+                    ? 'linear-gradient(180deg, #67e8f9 0%, #06b6d4 100%)'
+                    : 'linear-gradient(180deg, #22d3ee 0%, #0891b2 100%)',
+                  borderRadius: '3px 3px 0 0',
+                  boxShadow: isHovered ? '0 0 12px rgba(6, 182, 212, 0.5)' : 'none',
+                  transition: 'var(--transition-smooth)',
+                }}
+                title={`${day.unique_visitors} unique visitors`}
               />
             </div>
           );

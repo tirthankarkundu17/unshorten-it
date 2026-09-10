@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { VisitorItem } from '../types/analytics';
 import { fetchAdminVisitors } from '../api/adminApi';
 import {
@@ -8,6 +8,9 @@ import {
   Clock,
   RefreshCw,
   ChevronRight,
+  ChevronLeft,
+  ChevronsRight,
+  ChevronsLeft,
   Shield,
 } from 'lucide-react';
 
@@ -18,12 +21,14 @@ interface VisitorExplorerProps {
 export const VisitorExplorer: React.FC<VisitorExplorerProps> = ({ onSelectVisitor }) => {
   const [visitors, setVisitors] = useState<VisitorItem[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(25);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const loadVisitors = async (isInitial = false) => {
+  const loadVisitors = useCallback(async (page = currentPage, size = pageSize, isInitial = false) => {
     if (isInitial) {
       setIsLoading(true);
     } else {
@@ -32,7 +37,8 @@ export const VisitorExplorer: React.FC<VisitorExplorerProps> = ({ onSelectVisito
     setError(null);
 
     try {
-      const res = await fetchAdminVisitors(100);
+      const skip = (page - 1) * size;
+      const res = await fetchAdminVisitors(size, skip);
       setVisitors(res.visitors);
       setTotalCount(res.total_count);
     } catch (err: unknown) {
@@ -41,11 +47,22 @@ export const VisitorExplorer: React.FC<VisitorExplorerProps> = ({ onSelectVisito
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
-    loadVisitors(true);
-  }, []);
+    loadVisitors(currentPage, pageSize, true);
+  }, [currentPage, pageSize, loadVisitors]);
+
+  const handlePageChange = (newPage: number) => {
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+    setCurrentPage(newPage);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
 
   const filteredVisitors = visitors.filter((v) => {
     const q = searchQuery.toLowerCase();
@@ -124,7 +141,7 @@ export const VisitorExplorer: React.FC<VisitorExplorerProps> = ({ onSelectVisito
           </div>
 
           <button
-            onClick={() => loadVisitors(false)}
+            onClick={() => loadVisitors(currentPage, pageSize, false)}
             disabled={isLoading || isRefreshing}
             className={`refresh-btn ${isRefreshing ? 'rotating' : ''}`}
             title="Refresh visitors"
@@ -138,7 +155,7 @@ export const VisitorExplorer: React.FC<VisitorExplorerProps> = ({ onSelectVisito
       {error && (
         <div className="error-banner">
           <span>{error}</span>
-          <button onClick={() => loadVisitors(false)} className="retry-btn">
+          <button onClick={() => loadVisitors(currentPage, pageSize, false)} className="retry-btn">
             Retry
           </button>
         </div>
@@ -157,94 +174,182 @@ export const VisitorExplorer: React.FC<VisitorExplorerProps> = ({ onSelectVisito
           <p>No visitors found {searchQuery ? 'matching your search criteria' : 'in database'}.</p>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-            <thead>
-              <tr
-                style={{
-                  borderBottom: '1px solid var(--border-subtle)',
-                  color: 'var(--text-muted)',
-                  textAlign: 'left',
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Visitor IP</th>
-                <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Location</th>
-                <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Platforms</th>
-                <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Links Requested</th>
-                <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Last Active</th>
-                <th style={{ padding: '0.75rem 0.75rem', textAlign: 'right', fontWeight: 600 }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredVisitors.map((visitor) => {
-                const locationLabel = visitor.location
-                  ? [visitor.location.city, visitor.location.country].filter(Boolean).join(', ')
-                  : 'Unknown';
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+              <colgroup>
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '26%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '10%' }} />
+              </colgroup>
+              <thead>
+                <tr
+                  style={{
+                    borderBottom: '1px solid var(--border-subtle)',
+                    color: 'var(--text-muted)',
+                    textAlign: 'left',
+                    fontSize: '0.75rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Visitor IP</th>
+                  <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Location</th>
+                  <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Platforms</th>
+                  <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Links Requested</th>
+                  <th style={{ padding: '0.75rem 0.75rem', fontWeight: 600 }}>Last Active</th>
+                  <th style={{ padding: '0.75rem 0.75rem', textAlign: 'right', fontWeight: 600 }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredVisitors.map((visitor) => {
+                  const locationLabel = visitor.location
+                    ? [visitor.location.city, visitor.location.country].filter(Boolean).join(', ')
+                    : 'Unknown';
 
-                return (
-                  <tr
-                    key={visitor.ip}
-                    onClick={() => onSelectVisitor(visitor)}
-                    className="visitor-row"
-                    title={`Click to view all URLs requested by ${visitor.ip}`}
+                  return (
+                    <tr
+                      key={visitor.ip}
+                      onClick={() => onSelectVisitor(visitor)}
+                      className="visitor-row"
+                      title={`Click to view all URLs requested by ${visitor.ip}`}
+                    >
+                      <td style={{ padding: '0.85rem 0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span className="visitor-ip-badge">{visitor.ip}</span>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.85rem 0.75rem', color: 'var(--text-primary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <MapPin size={13} color="var(--accent-cyan)" />
+                          <span>{locationLabel}</span>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.85rem 0.75rem' }}>
+                        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                          {visitor.platforms.map((p) => (
+                            <span key={p} className="visitor-platform-pill">
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.85rem 0.75rem' }}>
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            color: 'var(--accent-emerald)',
+                            fontFamily: 'var(--font-mono)',
+                          }}
+                        >
+                          {visitor.total_requests.toLocaleString()}
+                        </span>
+                      </td>
+
+                      <td style={{ padding: '0.85rem 0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Clock size={12} />
+                          <span>{formatLastSeen(visitor.last_seen)}</span>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.85rem 0.75rem', textAlign: 'right' }}>
+                        <button className="view-links-action-btn">
+                          <span>View Links</span>
+                          <ChevronRight size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Server-side Pagination Controls */}
+          {totalCount > 0 && (
+            <div className="visitor-pagination-bar">
+              <div className="pagination-info">
+                <span>
+                  Showing{' '}
+                  <strong style={{ color: 'var(--text-primary)' }}>
+                    {((currentPage - 1) * pageSize + 1).toLocaleString()}
+                  </strong>{' '}
+                  to{' '}
+                  <strong style={{ color: 'var(--text-primary)' }}>
+                    {Math.min(currentPage * pageSize, totalCount).toLocaleString()}
+                  </strong>{' '}
+                  of{' '}
+                  <strong style={{ color: 'var(--text-primary)' }}>
+                    {totalCount.toLocaleString()}
+                  </strong>{' '}
+                  visitors
+                </span>
+              </div>
+
+              <div className="pagination-controls">
+                <div className="page-size-selector">
+                  <span>Rows:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                    className="page-size-select"
                   >
-                    <td style={{ padding: '0.85rem 0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span className="visitor-ip-badge">{visitor.ip}</span>
-                      </div>
-                    </td>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
 
-                    <td style={{ padding: '0.85rem 0.75rem', color: 'var(--text-primary)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <MapPin size={13} color="var(--accent-cyan)" />
-                        <span>{locationLabel}</span>
-                      </div>
-                    </td>
+                <div className="page-nav-group">
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage <= 1 || isLoading}
+                    className="page-nav-btn"
+                    title="First Page"
+                  >
+                    <ChevronsLeft size={16} />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage <= 1 || isLoading}
+                    className="page-nav-btn"
+                    title="Previous Page"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
 
-                    <td style={{ padding: '0.85rem 0.75rem' }}>
-                      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                        {visitor.platforms.map((p) => (
-                          <span key={p} className="visitor-platform-pill">
-                            {p}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
+                  <span className="page-status-pill">
+                    Page {currentPage} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+                  </span>
 
-                    <td style={{ padding: '0.85rem 0.75rem' }}>
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color: 'var(--accent-emerald)',
-                          fontFamily: 'var(--font-mono)',
-                        }}
-                      >
-                        {visitor.total_requests.toLocaleString()}
-                      </span>
-                    </td>
-
-                    <td style={{ padding: '0.85rem 0.75rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <Clock size={12} />
-                        <span>{formatLastSeen(visitor.last_seen)}</span>
-                      </div>
-                    </td>
-
-                    <td style={{ padding: '0.85rem 0.75rem', textAlign: 'right' }}>
-                      <button className="view-links-action-btn">
-                        <span>View Links</span>
-                        <ChevronRight size={14} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= Math.max(1, Math.ceil(totalCount / pageSize)) || isLoading}
+                    className="page-nav-btn"
+                    title="Next Page"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(Math.max(1, Math.ceil(totalCount / pageSize)))}
+                    disabled={currentPage >= Math.max(1, Math.ceil(totalCount / pageSize)) || isLoading}
+                    className="page-nav-btn"
+                    title="Last Page"
+                  >
+                    <ChevronsRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

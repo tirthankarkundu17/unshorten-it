@@ -172,34 +172,30 @@ export const App: React.FC = () => {
 
         {/* Action Controls */}
         <div className="controls-section">
-          {lastUpdated && activeTab === 'overview' && (
+          {lastUpdated && (
             <span className="last-updated-text">
               Updated: {lastUpdated.toLocaleTimeString()}
             </span>
           )}
 
-          {activeTab === 'overview' && (
-            <label className="auto-refresh-toggle" title="Auto refresh every 30 seconds">
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-              />
-              <span className="toggle-label">Auto (30s)</span>
-            </label>
-          )}
+          <label className="auto-refresh-toggle" title="Auto refresh every 30 seconds">
+            <input
+              type="checkbox"
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+            />
+            <span className="toggle-label">Auto (30s)</span>
+          </label>
 
-          {activeTab === 'overview' && (
-            <button
-              onClick={() => refetch()}
-              disabled={isLoading || isRefreshing}
-              className={`refresh-btn ${isRefreshing ? 'rotating' : ''}`}
-              title="Refresh metrics"
-            >
-              <RefreshCw size={16} />
-              <span>Refresh</span>
-            </button>
-          )}
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading || isRefreshing}
+            className={`refresh-btn ${isRefreshing ? 'rotating' : ''}`}
+            title="Refresh metrics"
+          >
+            <RefreshCw size={16} />
+            <span>Refresh</span>
+          </button>
 
           {installPrompt && (
             <button
