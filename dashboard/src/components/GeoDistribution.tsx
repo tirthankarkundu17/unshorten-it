@@ -49,6 +49,21 @@ export const GeoDistribution: React.FC<GeoDistributionProps> = ({
             </p>
           </div>
         </div>
+        {locations.length > 0 && (
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              padding: '0.2rem 0.6rem',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(6, 182, 212, 0.12)',
+              color: 'var(--accent-cyan)',
+              border: '1px solid rgba(6, 182, 212, 0.25)',
+            }}
+          >
+            {locations.length} Locations
+          </span>
+        )}
       </div>
 
       {locations.length === 0 ? (
@@ -60,7 +75,16 @@ export const GeoDistribution: React.FC<GeoDistributionProps> = ({
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.875rem',
+            maxHeight: '380px',
+            overflowY: 'auto',
+            paddingRight: '0.5rem',
+          }}
+        >
           {locations.map((loc, idx) => {
             const percentage = Math.min(100, Math.round((loc.count / totalGeoCount) * 100));
             const locationLabel = loc.city ? `${loc.city}, ${loc.country}` : loc.country;

@@ -102,8 +102,8 @@ export async function fetchAdminDashboardMetrics(): Promise<AdminDashboardRespon
   return data;
 }
 
-export async function fetchAdminVisitors(limit = 100): Promise<VisitorListResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/admin/analytics/visitors?limit=${limit}`, {
+export async function fetchAdminVisitors(limit = 50, skip = 0): Promise<VisitorListResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/admin/analytics/visitors?limit=${limit}&skip=${skip}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });

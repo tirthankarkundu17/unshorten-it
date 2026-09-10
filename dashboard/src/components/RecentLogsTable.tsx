@@ -84,10 +84,10 @@ export const RecentLogsTable: React.FC<RecentLogsTableProps> = ({ logs }) => {
                   letterSpacing: '0.05em',
                 }}
               >
-                <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600 }}>Time</th>
-                <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600 }}>Platform</th>
-                <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600 }}>Client IP</th>
-                <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600 }}>Location</th>
+                <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600, width: '110px' }}>Time</th>
+                <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600, width: '110px' }}>Platform</th>
+                <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600, width: '150px' }}>Client IP</th>
+                <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600, width: '200px' }}>Location</th>
                 <th style={{ padding: '0.75rem 0.5rem', fontWeight: 600 }}>Target URL</th>
               </tr>
             </thead>
@@ -158,7 +158,7 @@ export const RecentLogsTable: React.FC<RecentLogsTableProps> = ({ logs }) => {
                         <span style={{ color: 'var(--text-muted)' }}>Local / Unknown</span>
                       )}
                     </td>
-                    <td style={{ padding: '0.75rem 0.5rem', maxWidth: '320px' }}>
+                    <td style={{ padding: '0.75rem 0.5rem', maxWidth: '600px', minWidth: '240px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span
                           style={{
