@@ -2,6 +2,7 @@ package `in`.bitmaskers.unshortenit.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,18 +13,22 @@ import androidx.compose.material.icons.rounded.Cable
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import `in`.bitmaskers.unshortenit.ui.components.BadgeContainer
+import `in`.bitmaskers.unshortenit.ui.components.LabelWithDot
 import `in`.bitmaskers.unshortenit.ui.components.UrlBox
 import `in`.bitmaskers.unshortenit.ui.viewmodel.InterceptorViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
@@ -116,6 +121,7 @@ fun InterceptorScreen(
                             )
                         } else {
                             val context = LocalContext.current
+                            val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -133,15 +139,12 @@ fun InterceptorScreen(
                                         shape = RoundedCornerShape(16.dp)
                                     ) {
                                         Column(modifier = Modifier.padding(16.dp)) {
-                                            Text(
-                                                "Original Link",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
+                                            LabelWithDot(text = "Original Link", color = Color(0xFFF59E0B))
+                                            Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 originalUrl,
                                                 style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                color = MaterialTheme.colorScheme.onSurface,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
                                             )
@@ -161,29 +164,61 @@ fun InterceptorScreen(
                                             Spacer(modifier = Modifier.height(8.dp))
 
                                             result.onSuccess { response ->
-                                                Text(
-                                                    "Full URL",
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    color = Color(0xFF10B981) // Matching History Green
-                                                )
-                                                Spacer(modifier = Modifier.height(4.dp))
+                                                if (!response.isSafe) {
+                                                    Surface(
+                                                        color = if (isDark) Color(0xFF331014) else Color(0xFFFEF2F2),
+                                                        shape = RoundedCornerShape(14.dp),
+                                                        border = BorderStroke(1.dp, if (isDark) Color(0xFF7F1D1D) else Color(0xFFFECACA)),
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    ) {
+                                                        Row(
+                                                            modifier = Modifier.padding(14.dp),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Icon(
+                                                                imageVector = Icons.Rounded.Warning,
+                                                                contentDescription = "Security Alert",
+                                                                tint = if (isDark) Color(0xFFF87171) else Color(0xFFDC2626),
+                                                                modifier = Modifier.size(24.dp)
+                                                            )
+                                                            Spacer(modifier = Modifier.width(12.dp))
+                                                            Column {
+                                                                Text(
+                                                                    text = "Security Warning",
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = if (isDark) Color(0xFFFCA5A5) else Color(0xFF991B1B),
+                                                                    fontSize = 14.sp
+                                                                )
+                                                                Text(
+                                                                    text = "Flagged as ${response.threatType?.replace("_", " ") ?: "a threat"}. Do not visit.",
+                                                                    color = if (isDark) Color(0xFFF87171) else Color(0xFF7F1D1D),
+                                                                    fontSize = 12.sp
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                    Spacer(modifier = Modifier.height(14.dp))
+                                                }
+
+                                                LabelWithDot(text = "Full URL", color = Color(0xFF10B981))
+                                                Spacer(modifier = Modifier.height(6.dp))
                                                 UrlBox(
                                                     url = response.finalUrl,
-                                                    backgroundColor = Color(0xFFF0FDF4),
+                                                    backgroundColor = if (isDark) Color(0xFF062817) else Color(0xFFF0FDF4),
+                                                    borderColor = if (isDark) Color(0xFF065F46) else Color(0xFFBBF7D0),
+                                                    textColor = if (isDark) Color(0xFFA7F3D0) else Color(0xFF1E293B),
                                                     label = "Full URL"
                                                 )
 
                                                 if (response.cleanedUrl != response.finalUrl) {
-                                                    Spacer(modifier = Modifier.height(12.dp))
-                                                    Text(
-                                                        "Cleaned URL (Trackers Removed)",
-                                                        style = MaterialTheme.typography.labelMedium,
-                                                        color = Color(0xFF3B82F6) // Matching History Blue
-                                                    )
-                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Spacer(modifier = Modifier.height(14.dp))
+                                                    LabelWithDot(text = "Cleaned URL (Trackers Removed)", color = Color(0xFF3B82F6))
+                                                    Spacer(modifier = Modifier.height(6.dp))
                                                     UrlBox(
                                                         url = response.cleanedUrl,
-                                                        backgroundColor = Color(0xFFEFF6FF),
+                                                        backgroundColor = if (isDark) Color(0xFF0B2240) else Color(0xFFEFF6FF),
+                                                        borderColor = if (isDark) Color(0xFF1E40AF) else Color(0xFFBFDBFE),
+                                                        textColor = if (isDark) Color(0xFFBFDBFE) else Color(0xFF1E293B),
                                                         label = "Cleaned URL"
                                                     )
                                                 }
