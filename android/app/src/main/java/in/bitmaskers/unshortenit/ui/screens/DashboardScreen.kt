@@ -77,7 +77,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
 import `in`.bitmaskers.unshortenit.ui.components.QrScannerView
@@ -355,27 +354,6 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // AdMob Banner anchored to the bottom before padding
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFF9FAFB)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AdmobBanner()
-                }
-            }
         }
 
         if (isScannerOpen) {

@@ -32,6 +32,7 @@ import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import `in`.bitmaskers.unshortenit.R
+import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 
 @Composable
 fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
@@ -148,7 +149,28 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
             }
         },
         bottomBar = {
-            BottomNavigation(pagerState = pagerState, coroutineScope = coroutineScope)
+            Column {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFFF9FAFB)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AdmobBanner()
+                        }
+                    }
+                }
+                BottomNavigation(pagerState = pagerState, coroutineScope = coroutineScope)
+            }
         },
         containerColor = Color(0xFFF9FAFB)
     ) { innerPadding ->

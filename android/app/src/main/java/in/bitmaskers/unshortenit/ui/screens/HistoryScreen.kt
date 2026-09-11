@@ -32,7 +32,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 import `in`.bitmaskers.unshortenit.data.model.HistoryItem
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
@@ -184,26 +183,6 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
             }
         }
 
-        // AdMob Banner
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFFF9FAFB)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    AdmobBanner()
-                }
-            }
-        }
     }
 }
 
