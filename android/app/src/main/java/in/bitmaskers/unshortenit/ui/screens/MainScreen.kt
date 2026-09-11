@@ -174,25 +174,7 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
         },
         bottomBar = {
             Column {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            AdmobBanner()
-                        }
-                    }
-                }
+                AdmobBanner()
                 BottomNavigation(pagerState = pagerState, coroutineScope = coroutineScope)
             }
         },

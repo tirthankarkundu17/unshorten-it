@@ -2,12 +2,20 @@ package `in`.bitmaskers.unshortenit.ui.components
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,9 +31,14 @@ import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
 
 @Composable
-fun AdmobBanner(modifier: Modifier = Modifier) {
+fun AdmobBanner(
+    modifier: Modifier = Modifier,
+    onAdLoaded: () -> Unit = {},
+    onAdFailed: () -> Unit = {}
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    var isAdVisible by remember { mutableStateOf(true) }
 
     // Remember the AdView instance to prevent thrashing / recreation during recomposition
     val adView = remember {
@@ -36,6 +49,8 @@ fun AdmobBanner(modifier: Modifier = Modifier) {
             adListener = object : AdListener() {
                 override fun onAdLoaded() {
                     Log.d("Admob", "AdmobBanner: Ad loaded successfully")
+                    isAdVisible = true
+                    onAdLoaded()
                 }
 
                 override fun onAdFailedToLoad(error: LoadAdError) {
@@ -43,6 +58,8 @@ fun AdmobBanner(modifier: Modifier = Modifier) {
                         "Admob",
                         "AdmobBanner: Ad failed to load. Code: ${error.code}, Message: ${error.message}, Domain: ${error.domain}"
                     )
+                    isAdVisible = false
+                    onAdFailed()
                 }
             }
 
@@ -50,6 +67,8 @@ fun AdmobBanner(modifier: Modifier = Modifier) {
                 loadAd(AdRequest.Builder().build())
             } catch (e: Exception) {
                 Log.e("Admob", "Failed to load AdMob banner", e)
+                isAdVisible = false
+                onAdFailed()
             }
         }
     }
@@ -93,16 +112,30 @@ fun AdmobBanner(modifier: Modifier = Modifier) {
         }
     }
 
-    // Reserve fixed height (50dp for AdSize.BANNER) so parent layout never resizes or thrashes insets
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(50.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        AndroidView(
-            modifier = Modifier.size(width = 320.dp, height = 50.dp),
-            factory = { adView }
-        )
+    // Only render the container and divider if ad loading did not fail
+    if (isAdVisible) {
+        Surface(
+            modifier = modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .height(50.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AndroidView(
+                        modifier = Modifier.size(width = 320.dp, height = 50.dp),
+                        factory = { adView }
+                    )
+                }
+            }
+        }
     }
 }
