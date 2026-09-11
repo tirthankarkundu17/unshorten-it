@@ -3,98 +3,98 @@
 <en-US>
 What's new in this update:
 
-🌙 Dark Mode is here! Easily toggle between light and dark themes using the button at the top right of your dashboard.
-✨ Fresh Modern UI: Redesigned cards, cleaner spacing, and improved readability for destination URLs and redirect chains.
-🛡️ Tracker Removal: Easily spot and copy cleaned URLs with tracking parameters removed.
-⚡ Performance & Stability: Enhanced app stability, smoother navigation transitions, and smarter ad loading with no empty boxes.
+🌙 Dark Mode: Toggle between light and dark themes on your dashboard.
+✨ Modern UI: Redesigned cards and cleaner layout for links and redirect chains.
+🛡️ Clean URLs: Easily spot and copy links with tracking parameters removed.
+⚡ Stability: Improved reliability and smarter ad loading without empty boxes.
 </en-US>
 
 <es-ES>
 Novedades de esta actualización:
 
-🌙 ¡Modo oscuro disponible! Cambia fácilmente entre temas claro y oscuro con el botón en la esquina superior derecha del panel.
-✨ Nueva interfaz moderna: Tarjetas rediseñadas, mejor espaciado y mayor legibilidad para URLs de destino y cadenas de redirección.
-🛡️ Eliminación de rastreadores: Identifica y copia fácilmente enlaces limpios sin parámetros de seguimiento.
-⚡ Rendimiento y estabilidad: Mayor estabilidad, transiciones más fluidas y carga de anuncios más inteligente sin espacios vacíos.
+🌙 Modo oscuro: Cambia entre temas claro y oscuro desde el panel.
+✨ Interfaz moderna: Tarjetas rediseñadas para enlaces y redirecciones.
+🛡️ Enlaces limpios: Identifica y copia URLs sin parámetros de seguimiento.
+⚡ Estabilidad: Rendimiento mejorado y carga de anuncios sin espacios vacíos.
 </es-ES>
 
 <pt-BR>
 Novidades desta atualização:
 
-🌙 O Modo Escuro chegou! Alterne facilmente entre os temas claro e escuro no botão no canto superior direito do painel.
-✨ Interface moderna: Cards redesenhados, espaçamento aprimorado e melhor legibilidade para URLs de destino e redirecionamentos.
-🛡️ Remoção de rastreadores: Identifique e copie facilmente links limpos sem parâmetros de rastreamento.
-⚡ Desempenho e estabilidade: Maior estabilidade, transições mais suaves e carregamento inteligente de anúncios sem caixas vazias.
+🌙 Modo Escuro: Alterne entre temas claro e escuro no painel.
+✨ Interface moderna: Novo design para links e redirecionamentos.
+🛡️ Links limpos: Identifique e copie URLs sem parâmetros de rastreamento.
+⚡ Estabilidade: Melhor desempenho e carregamento de anúncios sem caixas vazias.
 </pt-BR>
 
 <fr-FR>
 Nouveautés de cette mise à jour :
 
-🌙 Le mode sombre est arrivé ! Basculez facilement entre les thèmes clair et sombre grâce au bouton en haut à droite du tableau de bord.
-✨ Nouvelle interface moderne : Cartes repensées, meilleur espacement et meilleure lisibilité des URL de destination et des redirections.
-🛡️ Suppression des traceurs : Repérez et copiez facilement les URL nettoyées sans paramètres de suivi.
-⚡ Performances et stabilité : Stabilité accrue, transitions de navigation plus fluides et chargement intelligent des annonces sans espaces vides.
+🌙 Mode sombre : Basculez entre thèmes clair et sombre sur le tableau de bord.
+✨ Nouvelle interface : Design repensé pour les liens et redirections.
+🛡️ Liens nettoyés : Copiez facilement les URL sans paramètres de suivi.
+⚡ Stabilité : Performances accrues et chargement d'annonces sans espaces vides.
 </fr-FR>
 
 <de-DE>
 Neu in diesem Update:
 
-🌙 Der Dunkelmodus ist da! Wechseln Sie ganz einfach über die Schaltfläche oben rechts auf dem Dashboard zwischen hellem und dunklem Design.
-✨ Modernes UI-Design: Neu gestaltete Karten, verbesserte Abstände und bessere Lesbarkeit von Ziel-URLs und Weiterleitungsketten.
-🛡️ Tracker-Entfernung: Bereinigte URLs ohne Tracking-Parameter mühelos erkennen und kopieren.
-⚡ Leistung & Stabilität: Verbesserte App-Stabilität, flüssigere Übergänge und intelligentere Anzeigenladezeiten ohne leere Felder.
+🌙 Dunkelmodus: Wechseln Sie im Dashboard zwischen hell und dunkel.
+✨ Modernes Design: Verbesserte Karten für Links und Weiterleitungsketten.
+🛡️ Saubere URLs: Links ohne Tracking-Parameter einfach kopieren.
+⚡ Stabilität: Bessere Leistung und smarte Anzeigen ohne leere Felder.
 </de-DE>
 
 <it-IT>
 Novità di questo aggiornamento:
 
-🌙 La modalità scura è arrivata! Passa facilmente dal tema chiaro a quello scuro con il pulsante in alto a destra nella dashboard.
-✨ Nuova interfaccia moderna: Schede riprogettate, spaziatura migliorata e maggiore leggibilità per gli URL di destinazione e i reindirizzamenti.
-🛡️ Rimozione dei tracker: Individua e copia facilmente gli URL puliti senza parametri di tracciamento.
-⚡ Prestazioni e stabilità: Maggiore stabilità dell'app, transizioni più fluide e caricamento annunci intelligente senza riquadri vuoti.
+🌙 Tema scuro: Passa da chiaro a scuro direttamente dalla dashboard.
+✨ Nuova interfaccia: Schede ridisegnate per link e reindirizzamenti.
+🛡️ Link puliti: Riconosci e copia URL senza parametri di tracciamento.
+⚡ Stabilità: Prestazioni migliori e annunci ottimizzati senza riquadri vuoti.
 </it-IT>
 
 <hi-IN>
 इस अपडेट में नया क्या है:
 
-🌙 डार्क मोड अब उपलब्ध है! डैशबोर्ड के ऊपरी दाएं कोने में दिए गए बटन से लाइट और डार्क थीम में आसानी से बदलें।
-✨ नया और आधुनिक यूआई: गंतव्य यूआरएल और रीडायरेक्ट चेन के लिए बेहतर डिज़ाइन, साफ़ लेआउट और आसान पठनीयता।
-🛡️ ट्रैकर हटाना: ट्रैकिंग पैरामीटर हटाकर साफ़ लिंक आसानी से पहचानें और कॉपी करें।
-⚡ प्रदर्शन और स्थिरता: ऐप की बेहतर स्थिरता, आसान नेविगेशन और विज्ञापनों की स्मार्ट लोडिंग जिससे खाली जगह नहीं दिखेगी।
+🌙 डार्क मोड: डैशबोर्ड से लाइट और डार्क थीम में बदलें।
+✨ नया यूआई: लिंक और रीडायरेक्ट के लिए बेहतर डिज़ाइन।
+🛡️ साफ़ यूआरएल: ट्रैकिंग पैरामीटर हटाकर साफ़ लिंक कॉपी करें।
+⚡ स्थिरता: बेहतर परफ़ॉर्मेंस और विज्ञापनों की स्मार्ट लोडिंग।
 </hi-IN>
 
 <ja-JP>
-今回のアップデート内容:
+アップデート内容:
 
-🌙 ダークモードに対応しました！ダッシュボード右上のボタンからライト／ダークテーマを簡単に切り替えられます。
-✨ 洗練されたモダンUI: カードデザインと余白を刷新し、遷移先URLやリダイレクト履歴の視認性を向上させました。
-🛡️ トラッカー自動除去: 追跡パラメータが除去されたクリーンなURLを素早く確認・コピーできます。
-⚡ パフォーマンスと安定性の向上: アプリの安定性を高め、スムーズな画面遷移と余白を残さないスマートな広告読み込みを実現しました。
+🌙 ダークモード: ダッシュボードからライト／ダークテーマを切替可能。
+✨ モダンUI: 遷移先URLやリダイレクトの表示を刷新。
+🛡️ トラッカー除去: 追跡パラメータを除去したクリーンなURLをコピー。
+⚡ 安定性向上: 画面遷移を改善し、余白を残さない広告表示に対応。
 </ja-JP>
 
 <ko-KR>
 새로운 기능:
 
-🌙 다크 모드 지원! 대시보드 우측 상단 버튼을 통해 라이트 모드와 다크 모드를 간편하게 전환하세요.
-✨ 새로운 모던 UI: 카드 디자인과 간격을 개선하여 최종 목적지 URL 및 리디렉션 경로를 더욱 읽기 쉽게 구성했습니다.
-🛡️ 트래커 제거: 추적 매개변수가 제거된 깔끔한 URL을 손쉽게 확인하고 복사하세요.
-⚡ 성능 및 안정성 향상: 앱 안정성 강화, 부드러운 화면 전환, 빈 상자 없이 깔끔하게 표시되는 스마트 광고 로딩을 적용했습니다.
+🌙 다크 모드: 대시보드에서 라이트/다크 테마를 간편하게 전환하세요.
+✨ 모던 UI: 링크 및 리디렉션 경로 표시 디자인 개선.
+🛡️ 트래커 제거: 추적 파라미터가 제거된 깔끔한 URL 복사.
+⚡ 안정성 향상: 앱 성능 최적화 및 빈 상자 없는 스마트 광고 로딩.
 </ko-KR>
 
 <zh-CN>
 本次更新内容：
 
-🌙 暗黑模式上线！点击仪表盘右上角按钮，即可在浅色与深色主题之间轻松切换。
-✨ 全新现代UI：卡片设计与间距全面升级，目标网址与重定向链路更加一目了然。
-🛡️ 去除追踪参数：轻松识别并一键复制已移除追踪参数的干净链接。
-⚡ 性能与稳定性提升：优化运行稳定性与导航流畅度，广告加载更智能，告别空白展示区。
+🌙 暗黑模式：在仪表盘中轻松切换浅色与深色主题。
+✨ 现代UI：重构卡片间距，目标链接与重定向更清晰。
+🛡️ 过滤追踪：一键复制已移除追踪参数的干净网址。
+⚡ 稳定性提升：性能全面优化，广告加载更智能无空白。
 </zh-CN>
 
 <ru-RU>
 Что нового в этом обновлении:
 
-🌙 Тёмная тема уже здесь! Легко переключайтесь между светлой и тёмной темами с помощью кнопки в правом верхнем углу панели.
-✨ Новый современный интерфейс: Обновлённые карточки, улучшенные отступы и удобное чтение конечных URL и цепочек перенаправлений.
-🛡️ Удаление трекеров: Быстро находите и копируйте очищенные ссылки без отслеживающих параметров.
-⚡ Производительность и стабильность: Повышенная стабильность приложения, более плавные переходы и умная загрузка рекламы без пустых блоков.
+🌙 Тёмная тема: Переключайтесь между темами на главной панели.
+✨ Новый дизайн: Обновлённые карточки для ссылок и перенаправлений.
+🛡️ Чистые ссылки: Копируйте URL без отслеживающих параметров.
+⚡ Стабильность: Улучшенная производительность и реклама без пустых окон.
 </ru-RU>
