@@ -117,12 +117,11 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
 
     Scaffold(
         topBar = {
-            // Updated Header to be centered and transparent, matching modern aesthetics
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
-                    .windowInsetsPadding(WindowInsets.statusBars),
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -133,15 +132,15 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
                                 colors = listOf(Color(0xFF4F46E5), Color(0xFF7C3AED))
                             )
                         ),
-                        fontSize = 28.sp,
+                        fontSize = 26.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = (-0.5).sp
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
                     Text(
                         text = "Reveal the destination before you click",
                         color = Color(0xFF64748B),
-                        fontSize = 14.sp,
+                        fontSize = 13.5.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
@@ -171,33 +170,47 @@ fun BottomNavigation(pagerState: PagerState, coroutineScope: kotlinx.coroutines.
     val items = listOf("Home", "History")
     val selectedIndex = pagerState.currentPage
 
-    NavigationBar(
-        containerColor = Color.Transparent,
-        contentColor = Color(0xFF1E293B)
+    Surface(
+        color = Color.White,
+        shadowElevation = 8.dp
     ) {
-        items.forEachIndexed { index, title ->
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = if (index == 0) Icons.Rounded.Home else Icons.Rounded.History,
-                        contentDescription = title
+        Column {
+            HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+            NavigationBar(
+                containerColor = Color.White,
+                contentColor = Color(0xFF1E293B),
+                windowInsets = WindowInsets.navigationBars
+            ) {
+                items.forEachIndexed { index, title ->
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                imageVector = if (index == 0) Icons.Rounded.Home else Icons.Rounded.History,
+                                contentDescription = title
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = title,
+                                fontWeight = if (selectedIndex == index) FontWeight.Bold else FontWeight.Medium
+                            )
+                        },
+                        selected = selectedIndex == index,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFF4F46E5), // Indigo
+                            selectedTextColor = Color(0xFF4F46E5),
+                            indicatorColor = Color(0xFFEEF2FF),
+                            unselectedIconColor = Color(0xFF94A3B8),
+                            unselectedTextColor = Color(0xFF94A3B8)
+                        )
                     )
-                },
-                label = { Text(title) },
-                selected = selectedIndex == index,
-                onClick = {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(index)
-                    }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF4F46E5), // Indigo
-                    selectedTextColor = Color(0xFF4F46E5),
-                    indicatorColor = Color(0xFFE0E7FF),
-                    unselectedIconColor = Color(0xFF94A3B8),
-                    unselectedTextColor = Color(0xFF94A3B8)
-                )
-            )
+                }
+            }
         }
     }
 }

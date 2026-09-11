@@ -3,6 +3,7 @@ package `in`.bitmaskers.unshortenit.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -36,6 +37,7 @@ import `in`.bitmaskers.unshortenit.data.model.HistoryItem
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
 import `in`.bitmaskers.unshortenit.ui.components.UrlBox
+import `in`.bitmaskers.unshortenit.ui.components.UrlFlowConnector
 import `in`.bitmaskers.unshortenit.ui.components.LabelWithDot
 import kotlinx.coroutines.launch
 
@@ -183,14 +185,24 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
         }
 
         // AdMob Banner
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White)
-                .padding(bottom = 8.dp),
-            contentAlignment = Alignment.BottomCenter
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color(0xFFF9FAFB)
         ) {
-            AdmobBanner()
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                HorizontalDivider(color = Color(0xFFE2E8F0), thickness = 0.5.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AdmobBanner()
+                }
+            }
         }
     }
 }
@@ -201,11 +213,12 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(18.dp)) {
             // Card Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -214,79 +227,83 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFEDE9FE)), // Light Purple
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFFEEF2FF)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.TrendingUp,
                         contentDescription = null,
-                        tint = Color(0xFF7C3AED),
+                        tint = Color(0xFF4F46E5),
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "Unshortened URL",
+                    text = "Unshortened Link",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1F2937),
+                    color = Color(0xFF0F172A),
                     modifier = Modifier.weight(1f)
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Rounded.Schedule,
                         contentDescription = null,
-                        tint = Color(0xFF9CA3AF),
+                        tint = Color(0xFF94A3B8),
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = getTimeAgo(item.timestamp),
                         fontSize = 12.sp,
-                        color = Color(0xFF6B7280)
+                        color = Color(0xFF64748B),
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Short URL
-            LabelWithDot(text = "Short URL", color = Color(0xFFF59E0B)) // Orange
-            Spacer(modifier = Modifier.height(8.dp))
+            LabelWithDot(text = "Short URL", color = Color(0xFFF59E0B))
+            Spacer(modifier = Modifier.height(6.dp))
             UrlBox(
                 url = item.originalUrl,
                 backgroundColor = Color(0xFFFFFBEB),
+                borderColor = Color(0xFFFDE68A),
                 label = "Short URL"
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Flow Connector
+            UrlFlowConnector()
 
-            // Full URL
-            LabelWithDot(text = "Full URL", color = Color(0xFF10B981)) // Green
-            Spacer(modifier = Modifier.height(8.dp))
+            // Destination / Full URL
+            LabelWithDot(text = "Destination URL", color = Color(0xFF10B981))
+            Spacer(modifier = Modifier.height(6.dp))
             UrlBox(
                 url = item.finalUrl,
                 backgroundColor = Color(0xFFF0FDF4),
-                label = "Full URL"
+                borderColor = Color(0xFFBBF7D0),
+                label = "Destination URL"
             )
 
             if (!item.isSafe) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
                 Surface(
-                    color = Color(0xFFFEF2F2), // Light Red
-                    shape = RoundedCornerShape(12.dp),
-                    border = null,
+                    color = Color(0xFFFEF2F2),
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, Color(0xFFFECACA)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Warning,
                             contentDescription = "Threat Warning",
-                            tint = Color(0xFFDC2626), // Red
+                            tint = Color(0xFFDC2626),
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -294,7 +311,7 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                             Text(
                                 text = "Security Warning",
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF991B1B), // Dark Red
+                                color = Color(0xFF991B1B),
                                 fontSize = 14.sp
                             )
                             Text(
@@ -308,25 +325,26 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
             }
 
             if (item.cleanedUrl != item.finalUrl) {
-                Spacer(modifier = Modifier.height(16.dp))
-                LabelWithDot(text = "Cleaned URL (Trackers Removed)", color = Color(0xFF3B82F6)) // Blue
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+                LabelWithDot(text = "Cleaned URL (Trackers Removed)", color = Color(0xFF3B82F6))
+                Spacer(modifier = Modifier.height(6.dp))
                 UrlBox(
                     url = item.cleanedUrl,
                     backgroundColor = Color(0xFFEFF6FF),
+                    borderColor = Color(0xFFBFDBFE),
                     label = "Cleaned URL"
                 )
             }
 
             if (item.title != null || item.description != null || item.imageUrl != null) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = Color(0xFFF8FAFC),
-                    shape = RoundedCornerShape(12.dp),
-                    border = null
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         if (item.imageUrl != null) {
                             AsyncImage(
                                 model = item.imageUrl,
@@ -334,27 +352,42 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(150.dp)
-                                    .clip(RoundedCornerShape(8.dp)),
+                                    .clip(RoundedCornerShape(10.dp)),
                                 contentScale = ContentScale.Crop
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
                         }
                         if (item.title != null) {
-                            Text(
-                                text = item.title,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = Color(0xFF1E293B)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Language,
+                                    contentDescription = null,
+                                    tint = Color(0xFF64748B),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = item.title,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = Color(0xFF1E293B),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                         if (item.description != null) {
-                            if (item.title != null) Spacer(modifier = Modifier.height(4.dp))
+                            if (item.title != null) Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = item.description,
                                 fontSize = 12.sp,
                                 color = Color(0xFF64748B),
                                 maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
+                                lineHeight = 17.sp
                             )
                         }
                     }
@@ -370,11 +403,11 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    color = Color(0xFFEFF6FF), // Light Blue
-                    shape = RoundedCornerShape(12.dp)
+                    color = Color(0xFFF1F5F9),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -383,23 +416,26 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                                 .clip(CircleShape)
                                 .background(Color(0xFF3B82F6))
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "${item.responseTime.toInt()}ms",
+                            text = "${item.responseTime.toInt()} ms",
                             fontSize = 12.sp,
-                            color = Color(0xFF2563EB),
-                            fontWeight = FontWeight.Medium
+                            color = Color(0xFF334155),
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
 
                 if (onDelete != null) {
-                    IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(36.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Rounded.Delete,
                             contentDescription = "Delete Item",
                             tint = Color(0xFFEF4444),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
