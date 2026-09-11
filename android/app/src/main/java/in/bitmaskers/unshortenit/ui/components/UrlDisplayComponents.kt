@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -45,7 +45,7 @@ fun LabelWithDot(text: String, color: Color) {
             text = text,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = Color(0xFF475569),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             letterSpacing = 0.2.sp
         )
     }
@@ -63,14 +63,14 @@ fun UrlFlowConnector(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .size(26.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFF1F5F9))
-                .border(1.dp, Color(0xFFE2E8F0), CircleShape),
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Rounded.ArrowDownward,
                 contentDescription = "Unshortens to",
-                tint = Color(0xFF64748B),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(15.dp)
             )
         }
@@ -82,7 +82,8 @@ fun UrlBox(
     url: String,
     backgroundColor: Color,
     label: String = "URL",
-    borderColor: Color? = null
+    borderColor: Color? = null,
+    textColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     val context = LocalContext.current
     val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -104,7 +105,7 @@ fun UrlBox(
                     .padding(vertical = 6.dp, horizontal = 2.dp),
                 fontSize = 13.5.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF1E293B),
+                color = textColor,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 19.sp
@@ -124,7 +125,7 @@ fun UrlBox(
                     Icon(
                         imageVector = Icons.Rounded.ContentCopy,
                         contentDescription = "Copy",
-                        tint = Color(0xFF64748B),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(17.dp)
                     )
                 }
@@ -136,9 +137,9 @@ fun UrlBox(
                     modifier = Modifier.size(34.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.OpenInNew,
+                        imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
                         contentDescription = "Open",
-                        tint = Color(0xFF64748B),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(17.dp)
                     )
                 }

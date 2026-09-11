@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -58,7 +59,7 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
         modifier = Modifier
             .fillMaxSize()
             .padding(innerPadding)
-            .background(Color(0xFFF9FAFB))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Redesigned History Header (Local) to match Dashboard theme
         Column(
@@ -74,14 +75,14 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
                 Column {
                     Text(
                         text = "History",
-                        color = Color(0xFF1E293B),
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
                     val count = if (uiState is UiState.Success) (uiState as UiState.Success).data.size else 0
                     Text(
                         text = "$count URLs unshortened",
-                        color = Color(0xFF64748B),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp
                     )
                 }
@@ -189,13 +190,14 @@ fun HistoryScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) {
 @Composable
 fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
     val context = LocalContext.current
+    val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             // Card Header
@@ -207,13 +209,13 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xFFEEF2FF)),
+                        .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.TrendingUp,
                         contentDescription = null,
-                        tint = Color(0xFF4F46E5),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -222,21 +224,21 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                     text = "Unshortened Link",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0F172A),
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Rounded.Schedule,
                         contentDescription = null,
-                        tint = Color(0xFF94A3B8),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = getTimeAgo(item.timestamp),
                         fontSize = 12.sp,
-                        color = Color(0xFF64748B),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -249,8 +251,9 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
             Spacer(modifier = Modifier.height(6.dp))
             UrlBox(
                 url = item.originalUrl,
-                backgroundColor = Color(0xFFFFFBEB),
-                borderColor = Color(0xFFFDE68A),
+                backgroundColor = if (isDark) Color(0xFF261D08) else Color(0xFFFFFBEB),
+                borderColor = if (isDark) Color(0xFF78350F) else Color(0xFFFDE68A),
+                textColor = if (isDark) Color(0xFFFDE68A) else Color(0xFF1E293B),
                 label = "Short URL"
             )
 
@@ -262,17 +265,18 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
             Spacer(modifier = Modifier.height(6.dp))
             UrlBox(
                 url = item.finalUrl,
-                backgroundColor = Color(0xFFF0FDF4),
-                borderColor = Color(0xFFBBF7D0),
+                backgroundColor = if (isDark) Color(0xFF062817) else Color(0xFFF0FDF4),
+                borderColor = if (isDark) Color(0xFF065F46) else Color(0xFFBBF7D0),
+                textColor = if (isDark) Color(0xFFA7F3D0) else Color(0xFF1E293B),
                 label = "Destination URL"
             )
 
             if (!item.isSafe) {
                 Spacer(modifier = Modifier.height(14.dp))
                 Surface(
-                    color = Color(0xFFFEF2F2),
+                    color = if (isDark) Color(0xFF331014) else Color(0xFFFEF2F2),
                     shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, Color(0xFFFECACA)),
+                    border = BorderStroke(1.dp, if (isDark) Color(0xFF7F1D1D) else Color(0xFFFECACA)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -282,7 +286,7 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                         Icon(
                             imageVector = Icons.Rounded.Warning,
                             contentDescription = "Threat Warning",
-                            tint = Color(0xFFDC2626),
+                            tint = Color(0xFFEF4444),
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -290,12 +294,12 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                             Text(
                                 text = "Security Warning",
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF991B1B),
+                                color = if (isDark) Color(0xFFFCA5A5) else Color(0xFF991B1B),
                                 fontSize = 14.sp
                             )
                             Text(
                                 text = "Flagged as ${item.threatType?.replace("_", " ") ?: "a threat"}. Do not visit.",
-                                color = Color(0xFF7F1D1D),
+                                color = if (isDark) Color(0xFFF87171) else Color(0xFF7F1D1D),
                                 fontSize = 12.sp
                             )
                         }
@@ -309,8 +313,9 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                 Spacer(modifier = Modifier.height(6.dp))
                 UrlBox(
                     url = item.cleanedUrl,
-                    backgroundColor = Color(0xFFEFF6FF),
-                    borderColor = Color(0xFFBFDBFE),
+                    backgroundColor = if (isDark) Color(0xFF0B2240) else Color(0xFFEFF6FF),
+                    borderColor = if (isDark) Color(0xFF1E40AF) else Color(0xFFBFDBFE),
+                    textColor = if (isDark) Color(0xFFBFDBFE) else Color(0xFF1E293B),
                     label = "Cleaned URL"
                 )
             }
@@ -319,9 +324,9 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                 Spacer(modifier = Modifier.height(14.dp))
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFFF8FAFC),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         if (item.imageUrl != null) {
@@ -344,7 +349,7 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                                 Icon(
                                     imageVector = Icons.Rounded.Language,
                                     contentDescription = null,
-                                    tint = Color(0xFF64748B),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -352,7 +357,7 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                                     text = item.title,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
-                                    color = Color(0xFF1E293B),
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -363,7 +368,7 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                             Text(
                                 text = item.description,
                                 fontSize = 12.sp,
-                                color = Color(0xFF64748B),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 3,
                                 overflow = TextOverflow.Ellipsis,
                                 lineHeight = 17.sp
@@ -382,7 +387,7 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    color = Color(0xFFF1F5F9),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Row(
@@ -393,13 +398,13 @@ fun HistoryCard(item: HistoryItem, onDelete: (() -> Unit)? = null) {
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF3B82F6))
+                                .background(MaterialTheme.colorScheme.primary)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "${item.responseTime.toInt()} ms",
                             fontSize = 12.sp,
-                            color = Color(0xFF334155),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.SemiBold
                         )
                     }

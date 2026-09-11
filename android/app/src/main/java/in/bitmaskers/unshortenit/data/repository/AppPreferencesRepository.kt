@@ -13,10 +13,19 @@ class AppPreferencesRepository(
     private val prefs: SharedPreferences = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
 
     companion object {
-        private const val KEY_NEVER_SHOW_REVIEW = "NEVER_SHOW_REVIEW_MAY_01"
-        private const val KEY_LAST_PROMPT_TIME = "LAST_PROMPT_TIME_2026_MAY_01"
-        private const val MIN_DAYS_BETWEEN_PROMPTS = 7L
+        const val KEY_NEVER_SHOW_REVIEW = "NEVER_SHOW_REVIEW_MAY_01"
+        const val KEY_LAST_PROMPT_TIME = "LAST_PROMPT_TIME_2026_MAY_01"
+        const val MIN_DAYS_BETWEEN_PROMPTS = 7L
         const val MIN_TIME_BETWEEN_PROMPTS_MS = MIN_DAYS_BETWEEN_PROMPTS * 24 * 60 * 60 * 1000
+        const val KEY_DARK_MODE = "KEY_DARK_MODE_ENABLED"
+    }
+
+    fun isDarkMode(default: Boolean): Boolean {
+        return prefs.getBoolean(KEY_DARK_MODE, default)
+    }
+
+    fun setDarkMode(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_DARK_MODE, enabled) }
     }
 
     fun setNeverShowReviewAgain(neverShow: Boolean) {

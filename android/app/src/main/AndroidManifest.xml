@@ -16,6 +16,7 @@
         android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
+        android:hardwareAccelerated="true"
         android:theme="@style/Theme.MyApplication">
         
         <!-- Sample AdMob App ID -->
@@ -26,7 +27,8 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.MyApplication.Transparent">
+            android:hardwareAccelerated="true"
+            android:theme="@style/Theme.MyApplication">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

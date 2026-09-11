@@ -31,6 +31,19 @@ class DashboardViewModel(
     private val _uiState = MutableStateFlow<UiState<List<HistoryItem>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<HistoryItem>>> = _uiState
 
+    private val _isDarkMode = MutableStateFlow(appPreferencesRepository.isDarkMode(default = false))
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode
+
+    fun setInitialDarkMode(systemDark: Boolean) {
+        _isDarkMode.value = appPreferencesRepository.isDarkMode(default = systemDark)
+    }
+
+    fun toggleDarkMode() {
+        val next = !_isDarkMode.value
+        _isDarkMode.value = next
+        appPreferencesRepository.setDarkMode(next)
+    }
+
     init {
         loadHistory()
         checkReviewPromptOnStartup()

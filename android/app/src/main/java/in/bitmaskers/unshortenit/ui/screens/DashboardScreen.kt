@@ -43,6 +43,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.draw.shadow
@@ -193,20 +194,20 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                 text = "Enter Shortened URL",
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = Color(0xFF1E293B),
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 8.dp, start = 2.dp)
             )
 
             OutlinedTextField(
                 value = inputUrl,
                 onValueChange = { inputUrl = it },
-                placeholder = { Text("e.g., bit.ly/abc123", color = Color(0xFF94A3B8), fontSize = 14.sp) },
+                placeholder = { Text("e.g., bit.ly/abc123", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Rounded.Link,
                         contentDescription = null,
-                        tint = Color(0xFF94A3B8)
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
                 trailingIcon = {
@@ -219,7 +220,7 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                                 Icon(
                                     imageVector = Icons.Rounded.Close,
                                     contentDescription = "Clear",
-                                    tint = Color(0xFF94A3B8)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -234,19 +235,19 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                             Icon(
                                 imageVector = Icons.Rounded.QrCodeScanner,
                                 contentDescription = "Scan QR",
-                                tint = Color(0xFF4F46E5)
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 },
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    unfocusedBorderColor = Color(0xFFE2E8F0),
-                    focusedBorderColor = Color(0xFF4F46E5),
-                    unfocusedTextColor = Color(0xFF1E293B),
-                    focusedTextColor = Color(0xFF1E293B)
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -332,17 +333,17 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                     ) {
                         Text(
                             text = "Most Recent Result",
-                            color = Color(0xFF1E293B),
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Surface(
-                            color = Color(0xFFEEF2FF),
+                            color = MaterialTheme.colorScheme.primaryContainer,
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 text = "Latest",
-                                color = Color(0xFF4F46E5),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
