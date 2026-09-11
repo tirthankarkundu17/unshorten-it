@@ -164,7 +164,7 @@ fun InterceptorScreen(
                                             Spacer(modifier = Modifier.height(8.dp))
 
                                             result.onSuccess { response ->
-                                                if (!response.isSafe) {
+                                                if (response.security?.isSafe == false) {
                                                     Surface(
                                                         color = if (isDark) Color(0xFF331014) else Color(0xFFFEF2F2),
                                                         shape = RoundedCornerShape(14.dp),
@@ -190,7 +190,7 @@ fun InterceptorScreen(
                                                                     fontSize = 14.sp
                                                                 )
                                                                 Text(
-                                                                    text = "Flagged as ${response.threatType?.replace("_", " ") ?: "a threat"}. Do not visit.",
+                                                                    text = "Flagged as ${response.security?.threatType?.replace("_", " ") ?: "a threat"}. Do not visit.",
                                                                     color = if (isDark) Color(0xFFF87171) else Color(0xFF7F1D1D),
                                                                     fontSize = 12.sp
                                                                 )
