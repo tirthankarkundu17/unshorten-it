@@ -68,6 +68,7 @@ android {
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             buildConfigField("String", "ADMOB_AD_UNIT_ID", "\"$admobAdUnitIdRelease\"")
             manifestPlaceholders["admobAppId"] = admobAppIdRelease
             proguardFiles(
