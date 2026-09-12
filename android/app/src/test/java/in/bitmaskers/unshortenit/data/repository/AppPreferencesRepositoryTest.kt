@@ -71,8 +71,8 @@ class AppPreferencesRepositoryTest {
 
     @Test
     fun `shouldShowRatePopup - true when neverShowAgain is false and no previous prompt`() {
-        mockPrefsMap["NEVER_SHOW_REVIEW"] = false
-        mockPrefsMap.remove("LAST_PROMPT_TIME")
+        mockPrefsMap[AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW] = false
+        mockPrefsMap.remove(AppPreferencesRepository.KEY_LAST_PROMPT_TIME)
         
         mockCurrentTime = AppPreferencesRepository.MIN_TIME_BETWEEN_PROMPTS_MS + 1000L
         
@@ -81,8 +81,8 @@ class AppPreferencesRepositoryTest {
 
     @Test
     fun `shouldShowRatePopup - false when neverShowAgain is false but not enough time passed`() {
-        mockPrefsMap["NEVER_SHOW_REVIEW"] = false
-        mockPrefsMap["LAST_PROMPT_TIME"] = 1000L
+        mockPrefsMap[AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW] = false
+        mockPrefsMap[AppPreferencesRepository.KEY_LAST_PROMPT_TIME] = 1000L
         
         mockCurrentTime = 1000L + (AppPreferencesRepository.MIN_TIME_BETWEEN_PROMPTS_MS / 2)
         
@@ -90,9 +90,9 @@ class AppPreferencesRepositoryTest {
     }
 
     @Test
-    fun `shouldShowRatePopup - true when neverShowAgain is false and exactly 10 days passed`() {
-        mockPrefsMap["NEVER_SHOW_REVIEW"] = false
-        mockPrefsMap["LAST_PROMPT_TIME"] = 1000L
+    fun `shouldShowRatePopup - true when neverShowAgain is false and enough time passed`() {
+        mockPrefsMap[AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW] = false
+        mockPrefsMap[AppPreferencesRepository.KEY_LAST_PROMPT_TIME] = 1000L
         
         mockCurrentTime = 1000L + AppPreferencesRepository.MIN_TIME_BETWEEN_PROMPTS_MS
         
@@ -101,8 +101,8 @@ class AppPreferencesRepositoryTest {
 
     @Test
     fun `shouldShowRatePopup - false when neverShowAgain is true`() {
-        mockPrefsMap["NEVER_SHOW_REVIEW"] = true
-        mockPrefsMap.remove("LAST_PROMPT_TIME")
+        mockPrefsMap[AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW] = true
+        mockPrefsMap.remove(AppPreferencesRepository.KEY_LAST_PROMPT_TIME)
         
         mockCurrentTime = AppPreferencesRepository.MIN_TIME_BETWEEN_PROMPTS_MS + 1000L
         
@@ -112,20 +112,20 @@ class AppPreferencesRepositoryTest {
     @Test
     fun `setNeverShowReviewAgain - saves correct value`() {
         repository.setNeverShowReviewAgain(true)
-        verify { editor.putBoolean("NEVER_SHOW_REVIEW", true) }
-        assertTrue(mockPrefsMap["NEVER_SHOW_REVIEW"] as Boolean)
+        verify { editor.putBoolean(AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW, true) }
+        assertTrue(mockPrefsMap[AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW] as Boolean)
 
         repository.setNeverShowReviewAgain(false)
-        verify { editor.putBoolean("NEVER_SHOW_REVIEW", false) }
-        assertFalse(mockPrefsMap["NEVER_SHOW_REVIEW"] as Boolean)
+        verify { editor.putBoolean(AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW, false) }
+        assertFalse(mockPrefsMap[AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW] as Boolean)
     }
 
     @Test
     fun `isNeverShowReviewAgain - returns correct value`() {
-        mockPrefsMap["NEVER_SHOW_REVIEW"] = true
+        mockPrefsMap[AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW] = true
         assertTrue(repository.isNeverShowReviewAgain())
 
-        mockPrefsMap["NEVER_SHOW_REVIEW"] = false
+        mockPrefsMap[AppPreferencesRepository.KEY_NEVER_SHOW_REVIEW] = false
         assertFalse(repository.isNeverShowReviewAgain())
     }
 
@@ -134,7 +134,23 @@ class AppPreferencesRepositoryTest {
         mockCurrentTime = 999888777666L
         repository.markRatingPromptShown()
         
-        verify { editor.putLong("LAST_PROMPT_TIME", 999888777666L) }
-        assertEquals(999888777666L, mockPrefsMap["LAST_PROMPT_TIME"])
+        verify { editor.putLong(AppPreferencesRepository.KEY_LAST_PROMPT_TIME, 999888777666L) }
+        assertEquals(999888777666L, mockPrefsMap[AppPreferencesRepository.KEY_LAST_PROMPT_TIME])
+    }
+
+    @Test
+    fun `isDarkMode and setDarkMode - saves and retrieves dark mode state`() {
+        assertFalse(repository.isDarkMode(default = false))
+        assertTrue(repository.isDarkMode(default = true))
+
+        repository.setDarkMode(true)
+        verify { editor.putBoolean(AppPreferencesRepository.KEY_DARK_MODE, true) }
+        assertTrue(mockPrefsMap[AppPreferencesRepository.KEY_DARK_MODE] as Boolean)
+        assertTrue(repository.isDarkMode(default = false))
+
+        repository.setDarkMode(false)
+        verify { editor.putBoolean(AppPreferencesRepository.KEY_DARK_MODE, false) }
+        assertFalse(mockPrefsMap[AppPreferencesRepository.KEY_DARK_MODE] as Boolean)
+        assertFalse(repository.isDarkMode(default = true))
     }
 }

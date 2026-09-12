@@ -8,6 +8,12 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
     private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(
+            FailoverInterceptor(
+                primaryUrlStr = BuildConfig.BACKEND_URL,
+                fallbackUrlStr = BuildConfig.BACKEND_URL2
+            )
+        )
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
                 .addHeader("X-App-Platform", "android")

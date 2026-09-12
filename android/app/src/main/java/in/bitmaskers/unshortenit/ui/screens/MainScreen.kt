@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,6 +34,7 @@ import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import `in`.bitmaskers.unshortenit.R
+import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 
 @Composable
 fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
@@ -43,6 +46,7 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
     val activity = context as? Activity
 
     val showReviewDialog by viewModel.showReviewDialog.collectAsState()
+    val isDarkMode by viewModel.isDarkMode.collectAsState()
 
     if (showReviewDialog) {
         AlertDialog(
@@ -73,7 +77,7 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4F46E5) // Matches modern Indigo accent
+                        containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Text(stringResource(R.string.review_prompt_rate_now), color = Color.White)
@@ -86,7 +90,7 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
                             viewModel.onReviewAction(ReviewAction.NEVER)
                         }
                     ) {
-                        Text(stringResource(R.string.review_prompt_no_thanks), color = Color(0xFF64748B))
+                        Text(stringResource(R.string.review_prompt_no_thanks), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
@@ -94,11 +98,11 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
                             viewModel.onReviewAction(ReviewAction.REMIND_LATER)
                         }
                     ) {
-                        Text(stringResource(R.string.review_prompt_later), color = Color(0xFF4F46E5))
+                        Text(stringResource(R.string.review_prompt_later), color = MaterialTheme.colorScheme.primary)
                     }
                 }
             },
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = MaterialTheme.shapes.large
         )
     }
@@ -117,41 +121,64 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
 
     Scaffold(
         topBar = {
-            // Updated Header to be centered and transparent, matching modern aesthetics
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
-                    .windowInsetsPadding(WindowInsets.statusBars),
-                contentAlignment = Alignment.Center
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(horizontal = 20.dp, vertical = 14.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Text(
                         text = "Unshorten It",
                         style = TextStyle(
                             brush = Brush.linearGradient(
-                                colors = listOf(Color(0xFF4F46E5), Color(0xFF7C3AED))
+                                colors = listOf(Color(0xFF6366F1), Color(0xFF8B5CF6))
                             )
                         ),
-                        fontSize = 28.sp,
+                        fontSize = 26.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = (-0.5).sp
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
                     Text(
                         text = "Reveal the destination before you click",
-                        color = Color(0xFF64748B),
-                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.5.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
                     )
                 }
+
+                // Dark mode toggle button at top right of dashboard header
+                if (pagerState.currentPage == 0) {
+                    IconButton(
+                        onClick = { viewModel.toggleDarkMode() },
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Icon(
+                            imageVector = if (isDarkMode) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
+                            contentDescription = if (isDarkMode) "Switch to Light Mode" else "Switch to Dark Mode",
+                            tint = if (isDarkMode) Color(0xFFFBBF24) else Color(0xFF6366F1),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
         },
         bottomBar = {
-            BottomNavigation(pagerState = pagerState, coroutineScope = coroutineScope)
+            Column {
+                AdmobBanner()
+                BottomNavigation(pagerState = pagerState, coroutineScope = coroutineScope)
+            }
         },
-        containerColor = Color(0xFFF9FAFB)
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         HorizontalPager(
             state = pagerState,
@@ -171,33 +198,47 @@ fun BottomNavigation(pagerState: PagerState, coroutineScope: kotlinx.coroutines.
     val items = listOf("Home", "History")
     val selectedIndex = pagerState.currentPage
 
-    NavigationBar(
-        containerColor = Color.Transparent,
-        contentColor = Color(0xFF1E293B)
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 8.dp
     ) {
-        items.forEachIndexed { index, title ->
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = if (index == 0) Icons.Rounded.Home else Icons.Rounded.History,
-                        contentDescription = title
+        Column {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 0.5.dp)
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                windowInsets = WindowInsets.navigationBars
+            ) {
+                items.forEachIndexed { index, title ->
+                    NavigationBarItem(
+                        icon = {
+                            Icon(
+                                imageVector = if (index == 0) Icons.Rounded.Home else Icons.Rounded.History,
+                                contentDescription = title
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = title,
+                                fontWeight = if (selectedIndex == index) FontWeight.Bold else FontWeight.Medium
+                            )
+                        },
+                        selected = selectedIndex == index,
+                        onClick = {
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
-                },
-                label = { Text(title) },
-                selected = selectedIndex == index,
-                onClick = {
-                    coroutineScope.launch {
-                        pagerState.animateScrollToPage(index)
-                    }
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFF4F46E5), // Indigo
-                    selectedTextColor = Color(0xFF4F46E5),
-                    indicatorColor = Color(0xFFE0E7FF),
-                    unselectedIconColor = Color(0xFF94A3B8),
-                    unselectedTextColor = Color(0xFF94A3B8)
-                )
-            )
+                }
+            }
         }
     }
 }

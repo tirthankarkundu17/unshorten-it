@@ -32,6 +32,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.Button
@@ -39,10 +40,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,7 +78,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import `in`.bitmaskers.unshortenit.ui.components.AdmobBanner
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 import `in`.bitmaskers.unshortenit.ui.viewmodel.UiState
 import `in`.bitmaskers.unshortenit.ui.components.QrScannerView
@@ -124,109 +127,127 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
             // Link Setup Banner (only on Android 12+ where manual enable is needed)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val lifecycleOwner = LocalLifecycleOwner.current
-            var isLinkHandlingAllowed by remember { mutableStateOf(true) }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val lifecycleOwner = LocalLifecycleOwner.current
+                var isLinkHandlingAllowed by remember { mutableStateOf(true) }
 
-            val checkLinkHandling: () -> Boolean = {
-                try {
-                    val manager = context.getSystemService(DomainVerificationManager::class.java)
-                    val userState = manager?.getDomainVerificationUserState(context.packageName)
-                    val hasAllSelectedDomains = userState?.hostToStateMap?.values?.all { state ->
-                        state == DomainVerificationUserState.DOMAIN_STATE_SELECTED ||
-                                state == DomainVerificationUserState.DOMAIN_STATE_VERIFIED
-                    } == true
-                    (userState?.isLinkHandlingAllowed == true) && hasAllSelectedDomains
-                } catch (e: Exception) {
-                    false
-                }
-            }
-
-            DisposableEffect(lifecycleOwner) {
-                val observer = LifecycleEventObserver { _, event ->
-                    if (event == Lifecycle.Event.ON_RESUME) {
-                        isLinkHandlingAllowed = checkLinkHandling()
+                val checkLinkHandling: () -> Boolean = {
+                    try {
+                        val manager = context.getSystemService(DomainVerificationManager::class.java)
+                        val userState = manager?.getDomainVerificationUserState(context.packageName)
+                        val hasAllSelectedDomains = userState?.hostToStateMap?.values?.all { state ->
+                            state == DomainVerificationUserState.DOMAIN_STATE_SELECTED ||
+                                    state == DomainVerificationUserState.DOMAIN_STATE_VERIFIED
+                        } == true
+                        (userState?.isLinkHandlingAllowed == true) && hasAllSelectedDomains
+                    } catch (e: Exception) {
+                        false
                     }
                 }
-                lifecycleOwner.lifecycle.addObserver(observer)
 
-                // Initial check
-                isLinkHandlingAllowed = checkLinkHandling()
-
-                onDispose {
-                    lifecycleOwner.lifecycle.removeObserver(observer)
-                }
-            }
-
-            if (!isLinkHandlingAllowed) {
-                val prefs = context.getSharedPreferences(SharedPrefsKeys.PREFS_NAME, 0)
-                var showBanner by remember {
-                    mutableStateOf(
-                        !prefs.getBoolean(
-                            SharedPrefsKeys.LINK_SETUP_DISMISSED,
-                            false
-                        )
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = showBanner,
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                    LinkSetupBanner(
-                        onDismiss = {
-                            prefs.edit().putBoolean(SharedPrefsKeys.LINK_SETUP_DISMISSED, true).apply()
-                            showBanner = false
+                DisposableEffect(lifecycleOwner) {
+                    val observer = LifecycleEventObserver { _, event ->
+                        if (event == Lifecycle.Event.ON_RESUME) {
+                            isLinkHandlingAllowed = checkLinkHandling()
                         }
-                    )
+                    }
+                    lifecycleOwner.lifecycle.addObserver(observer)
+
+                    // Initial check
+                    isLinkHandlingAllowed = checkLinkHandling()
+
+                    onDispose {
+                        lifecycleOwner.lifecycle.removeObserver(observer)
+                    }
+                }
+
+                if (!isLinkHandlingAllowed) {
+                    val prefs = context.getSharedPreferences(SharedPrefsKeys.PREFS_NAME, 0)
+                    var showBanner by remember {
+                        mutableStateOf(
+                            !prefs.getBoolean(
+                                SharedPrefsKeys.LINK_SETUP_DISMISSED,
+                                false
+                            )
+                        )
+                    }
+
+                    AnimatedVisibility(
+                        visible = showBanner,
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        LinkSetupBanner(
+                            onDismiss = {
+                                prefs.edit().putBoolean(SharedPrefsKeys.LINK_SETUP_DISMISSED, true).apply()
+                                showBanner = false
+                            }
+                        )
+                    }
                 }
             }
-        }
 
-        // Input Section
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+            // Input Section
             Text(
                 text = "Enter Shortened URL",
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1E293B),
-                modifier = Modifier.padding(bottom = 8.dp)
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(bottom = 8.dp, start = 2.dp)
             )
 
             OutlinedTextField(
                 value = inputUrl,
                 onValueChange = { inputUrl = it },
-                placeholder = { Text("e.g., bit.ly/abc123", color = Color(0xFF94A3B8)) },
+                placeholder = { Text("e.g., bit.ly/abc123", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
                 modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Rounded.Link,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
                 trailingIcon = {
-                    IconButton(onClick = {
-                        val permission = Manifest.permission.CAMERA
-                        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
-                            isScannerOpen = true
-                        } else {
-                            cameraPermissionLauncher.launch(permission)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        if (inputUrl.isNotEmpty()) {
+                            IconButton(onClick = { inputUrl = "" }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = "Clear",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Rounded.QrCodeScanner,
-                            contentDescription = "Scan QR",
-                            tint = Color(0xFF64748B)
-                        )
+                        IconButton(onClick = {
+                            val permission = Manifest.permission.CAMERA
+                            if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+                                isScannerOpen = true
+                            } else {
+                                cameraPermissionLauncher.launch(permission)
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Rounded.QrCodeScanner,
+                                contentDescription = "Scan QR",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFFF1F5F9),
-                    focusedContainerColor = Color(0xFFF1F5F9),
-                    unfocusedBorderColor = Color(0xFFE2E8F0),
-                    focusedBorderColor = Color(0xFF94A3B8),
-                    unfocusedTextColor = Color(0xFF334155),
-                    focusedTextColor = Color(0xFF334155)
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
@@ -242,21 +263,26 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             val gradientAlpha = if (!isUnshortening) 1f else 0.6f
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(52.dp)
+                    .shadow(
+                        elevation = if (!isUnshortening) 4.dp else 0.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        spotColor = Color(0x404F46E5)
+                    )
                     .background(
-                        brush = Brush.linearGradient(
+                        brush = Brush.horizontalGradient(
                             colors = listOf(
                                 Color(0xFF4F46E5).copy(alpha = gradientAlpha),
                                 Color(0xFF7C3AED).copy(alpha = gradientAlpha)
                             )
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp)
                     )
                     .then(
                         if (!isUnshortening) Modifier.clickable {
@@ -271,59 +297,64 @@ fun DashboardScreen(viewModel: DashboardViewModel, innerPadding: PaddingValues) 
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = Color.White,
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.5.dp
                     )
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Rounded.AutoAwesome,
                             contentDescription = "Unshorten",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(19.dp),
                             tint = Color.White
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Unshorten URL",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = Color.White
+                            fontSize = 15.sp,
+                            color = Color.White,
+                            letterSpacing = 0.2.sp
                         )
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Latest Result Feedback (If there are items)
-        if (uiState is UiState.Success && (uiState as UiState.Success).data.isNotEmpty()) {
-            val latestItem = (uiState as UiState.Success).data.first()
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Text(
-                    text = "Most Recent Result",
-                    color = Color(0xFF64748B),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                // Reuse the History Card logic for consistency
-                HistoryCard(item = latestItem)
+            // Latest Result Feedback (If there are items)
+            if (uiState is UiState.Success && (uiState as UiState.Success).data.isNotEmpty()) {
+                val latestItem = (uiState as UiState.Success).data.first()
+                Spacer(modifier = Modifier.height(26.dp))
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 10.dp, start = 2.dp, end = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Most Recent Result",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "Latest",
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+                    HistoryCard(item = latestItem)
+                }
             }
-        }
 
-        }
-
-        // AdMob Banner anchored to the bottom before padding
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            AdmobBanner()
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
         if (isScannerOpen) {
@@ -346,7 +377,7 @@ private fun LinkSetupBanner(onDismiss: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(bottom = 16.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {

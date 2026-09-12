@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "in.bitmaskers.unshortenit"
-    compileSdk = 37
+    compileSdk = 36
 
     // Load local.properties if it exists
     val localProperties = Properties()
@@ -31,8 +31,8 @@ android {
         applicationId = "in.bitmaskers.unshortenit"
         minSdk = 24
         targetSdk = 36
-        versionCode = 11
-        versionName = "5.2"
+        versionCode = 13
+        versionName = "6.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -48,8 +48,13 @@ android {
         val envUrl = System.getenv("UNSHORTEN_IT_BACKEND")
         val backendUrl = localUrl ?: envUrl ?: defaultBackendUrl
 
+        val localUrl2 = localProperties.getProperty("BACKEND_URL2")
+        val envUrl2 = System.getenv("UNSHORTEN_IT_BACKEND2")
+        val backendUrl2 = localUrl2 ?: envUrl2 ?: ""
+
         // Inject this into the generated BuildConfig.java file
         buildConfigField("String", "BACKEND_URL", "\"$backendUrl\"")
+        buildConfigField("String", "BACKEND_URL2", "\"$backendUrl2\"")
 
         // Default to debug/test IDs in defaultConfig
         buildConfigField("String", "ADMOB_AD_UNIT_ID", "\"$admobAdUnitIdDebug\"")
@@ -63,6 +68,7 @@ android {
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             buildConfigField("String", "ADMOB_AD_UNIT_ID", "\"$admobAdUnitIdRelease\"")
             manifestPlaceholders["admobAppId"] = admobAppIdRelease
             proguardFiles(
