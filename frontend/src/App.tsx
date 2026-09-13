@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Link as LinkIcon, ExternalLink, Clock, AlertCircle, Smartphone, ShieldAlert, History, Trash2, ArrowLeft, CornerDownRight, QrCode, X } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { useTheme } from './hooks/useTheme';
+import { ThemeToggle } from './components/ThemeToggle';
 import './App.css';
 
 interface PagePreview {
@@ -36,6 +38,7 @@ interface ErrorResponse {
 }
 
 function App() {
+  const { theme, setTheme } = useTheme();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<UnshortenResponse | null>(null);
@@ -118,15 +121,19 @@ function App() {
   return (
     <div className="app-container">
       <div className="top-bar">
-        {history.length > 0 && (
-          <button
-            className="glass-btn history-toggle-btn"
-            onClick={() => setShowHistory(!showHistory)}
-          >
-            <History size={18} />
-            <span>History</span>
-          </button>
-        )}
+        <div className="top-bar-actions">
+          {history.length > 0 && (
+            <button
+              className="glass-btn history-toggle-btn"
+              onClick={() => setShowHistory(!showHistory)}
+              aria-label={showHistory ? 'Back to Search' : 'View History'}
+            >
+              <History size={17} />
+              <span>History</span>
+            </button>
+          )}
+          <ThemeToggle theme={theme} onThemeChange={setTheme} />
+        </div>
       </div>
       <header className="hero animate-slide-up">
         <h1 className="title text-gradient">Unshorten It</h1>
@@ -151,7 +158,7 @@ function App() {
             </div>
             {history.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}>
-                <History size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+                <History size={48} style={{ opacity: 0.25, marginBottom: '1rem' }} />
                 <p style={{ fontSize: '1.1rem' }}>No history available yet.</p>
               </div>
             ) : (
@@ -224,7 +231,7 @@ function App() {
                   </button>
                 </div>
                 {scannerError ? (
-                  <div className="error-text" style={{ textAlign: 'center', color: 'var(--error-color)', marginBottom: '1rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
+                  <div className="error-text" style={{ textAlign: 'center', color: 'var(--error-panel-text)', marginBottom: '1rem', padding: '1rem', background: 'var(--error-panel-bg)', border: '1px solid var(--error-panel-border)', borderRadius: '8px' }}>
                     {scannerError}
                   </div>
                 ) : null}
@@ -304,7 +311,7 @@ function App() {
                     <Clock size={16} className="stat-icon" />
                     <span>Traced in <strong>{result.response_time_ms}ms</strong></span>
                     {result.cached && (
-                      <span style={{ marginLeft: '8px', fontSize: '0.75rem', padding: '2px 6px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px' }}>
+                      <span style={{ marginLeft: '8px', fontSize: '0.75rem', padding: '2px 6px', background: 'var(--card-inner-bg)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
                         Cached
                       </span>
                     )}

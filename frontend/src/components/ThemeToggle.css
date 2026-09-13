@@ -1,0 +1,69 @@
+.theme-toggle-container {
+  display: inline-flex;
+  align-items: center;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: var(--toggle-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 9999px;
+  padding: 3px;
+  gap: 2px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.theme-toggle-btn {
+  background: transparent;
+  border: none;
+  border-radius: 9999px;
+  padding: 6px 10px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  user-select: none;
+}
+
+.theme-toggle-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+
+.theme-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 1px;
+}
+
+.theme-toggle-btn.active {
+  background: var(--toggle-active-bg);
+  color: var(--text-primary);
+  box-shadow: var(--toggle-active-shadow);
+  font-weight: 600;
+}
+
+.theme-toggle-btn.active svg {
+  color: var(--accent-color);
+}
+
+.theme-label {
+  display: inline;
+}
+
+@media (max-width: 640px) {
+  .theme-toggle-btn {
+    padding: 6px 8px;
+  }
+  .theme-label {
+    display: none;
+  }
+}
