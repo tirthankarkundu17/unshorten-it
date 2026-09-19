@@ -49,4 +49,4 @@ jobs:
 
       - name: Build and push Frontend image via Make
         run: |
-          make docker-build-push-frontend DOCKER_USER=$DOCKER_USERNAME
+          make docker-build-push-frontend DOCKER_USER=$DOCKER_USERNAME ADSENSE_CLIENT_ID="${{ secrets.ADSENSE_CLIENT_ID || vars.ADSENSE_CLIENT_ID || secrets.VITE_ADSENSE_CLIENT_ID || vars.VITE_ADSENSE_CLIENT_ID }}"
