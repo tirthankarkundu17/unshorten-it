@@ -5,18 +5,22 @@ on:
     branches:
       - main
     paths:
-      - 'frontend/**'
-      - '.github/workflows/deploy-pages.yml'
+      - "frontend/**"
+      - ".github/workflows/deploy-pages.yml"
   pull_request:
     branches:
       - main
     paths:
-      - 'frontend/**'
-      - '.github/workflows/deploy-pages.yml'
+      - "frontend/**"
+      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
     inputs:
       api_base_url:
-        description: 'Backend API Base URL (e.g., https://api.example.com)'
+        description: "Backend API Base URL (e.g., https://api.example.com)"
+        required: false
+        type: string
+      adsense_client_id:
+        description: "Google AdSense Client ID (e.g., ca-pub-XXXXXXXXXXXXXXXX)"
         required: false
         type: string
 
@@ -28,7 +32,7 @@ permissions:
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
@@ -42,7 +46,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Setup Pages
@@ -71,6 +75,7 @@ jobs:
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || './' }}
           VITE_API_BASE_URL: ${{ inputs.api_base_url || vars.VITE_API_BASE_URL || secrets.VITE_API_BASE_URL }}
+          VITE_ADSENSE_CLIENT_ID: ${{ inputs.adsense_client_id || secrets.ADSENSE_CLIENT_ID || vars.ADSENSE_CLIENT_ID || secrets.VITE_ADSENSE_CLIENT_ID || vars.VITE_ADSENSE_CLIENT_ID }}
         run: npm run build
 
       - name: Upload Pages Artifact

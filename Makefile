@@ -64,7 +64,7 @@ docker-run-backend:
 
 # Build the Frontend Docker image locally
 docker-build-frontend:
-	cd frontend && docker build -t unshorten-it-frontend .
+	cd frontend && docker build --build-arg VITE_ADSENSE_CLIENT_ID="$(ADSENSE_CLIENT_ID)" -t unshorten-it-frontend .
 
 # Run the Frontend Docker container locally
 docker-run-frontend:
@@ -84,7 +84,7 @@ docker-build-push-backend: docker-setup-buildx test-backend
 
 # Multi-arch build and push for frontend
 docker-build-push-frontend: docker-setup-buildx
-	cd frontend && docker buildx build --platform linux/amd64,linux/arm64 -t $(FRONTEND_IMAGE) --push .
+	cd frontend && docker buildx build --platform linux/amd64,linux/arm64 --build-arg VITE_ADSENSE_CLIENT_ID="$(ADSENSE_CLIENT_ID)" -t $(FRONTEND_IMAGE) --push .
 
 # Run the full stack using Docker Compose
 docker-up:
