@@ -1,10 +1,12 @@
 package `in`.bitmaskers.unshortenit.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BrightnessAuto
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
@@ -17,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.semantics.Role
+import `in`.bitmaskers.unshortenit.data.model.ThemeMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,7 +50,7 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
     val activity = context as? Activity
 
     val showReviewDialog by viewModel.showReviewDialog.collectAsState()
-    val isDarkMode by viewModel.isDarkMode.collectAsState()
+    val themeMode by viewModel.themeMode.collectAsState()
 
     if (showReviewDialog) {
         AlertDialog(
@@ -152,21 +156,44 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
                     )
                 }
 
-                // Dark mode toggle button at top right of dashboard header
+                // Theme mode toggle button at top right of dashboard header (Compact: 32dp container, 16dp icon)
                 if (pagerState.currentPage == 0) {
-                    IconButton(
-                        onClick = { viewModel.toggleDarkMode() },
+                    val (icon, description, tint) = when (themeMode) {
+                        ThemeMode.SYSTEM -> Triple(
+                            Icons.Rounded.BrightnessAuto,
+                            "Theme: Auto (System) - Tap to switch to Dark Mode",
+                            MaterialTheme.colorScheme.primary
+                        )
+                        ThemeMode.DARK -> Triple(
+                            Icons.Rounded.DarkMode,
+                            "Theme: Dark - Tap to switch to Light Mode",
+                            Color(0xFFA5B4FC)
+                        )
+                        ThemeMode.LIGHT -> Triple(
+                            Icons.Rounded.LightMode,
+                            "Theme: Light - Tap to switch to Auto (System)",
+                            Color(0xFFF59E0B)
+                        )
+                    }
+
+                    Box(
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
-                            .size(40.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable(
+                                role = Role.Button,
+                                onClickLabel = description,
+                                onClick = { viewModel.cycleThemeMode() }
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (isDarkMode) Icons.Rounded.LightMode else Icons.Rounded.DarkMode,
-                            contentDescription = if (isDarkMode) "Switch to Light Mode" else "Switch to Dark Mode",
-                            tint = if (isDarkMode) Color(0xFFFBBF24) else Color(0xFF6366F1),
-                            modifier = Modifier.size(20.dp)
+                            imageVector = icon,
+                            contentDescription = description,
+                            tint = tint,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
