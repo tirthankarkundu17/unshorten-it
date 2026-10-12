@@ -2,6 +2,7 @@ package `in`.bitmaskers.unshortenit.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import `in`.bitmaskers.unshortenit.data.model.ThemeMode
 import `in`.bitmaskers.unshortenit.utils.SharedPrefsKeys.APP_PREFS_NAME
 import io.mockk.every
 import io.mockk.mockk
@@ -61,6 +62,23 @@ class AppPreferencesRepositoryTest {
             val value = args[1] as Long
             mockPrefsMap[key] = value
             editor
+        }
+
+        // Mock String getting/setting
+        every { sharedPreferences.getString(any(), any()) } answers {
+            val key = args[0] as String
+            val default = args[1] as? String
+            mockPrefsMap[key] as? String ?: default
+        }
+        every { editor.putString(any(), any()) } answers {
+            val key = args[0] as String
+            val value = args[1] as String
+            mockPrefsMap[key] = value
+            editor
+        }
+        every { sharedPreferences.contains(any()) } answers {
+            val key = args[0] as String
+            mockPrefsMap.containsKey(key)
         }
 
         repository = AppPreferencesRepository(
@@ -152,5 +170,34 @@ class AppPreferencesRepositoryTest {
         verify { editor.putBoolean(AppPreferencesRepository.KEY_DARK_MODE, false) }
         assertFalse(mockPrefsMap[AppPreferencesRepository.KEY_DARK_MODE] as Boolean)
         assertFalse(repository.isDarkMode(default = true))
+    }
+
+    @Test
+    fun `getThemeMode returns SYSTEM by default when no preference set`() {
+        assertEquals(ThemeMode.SYSTEM, repository.getThemeMode())
+    }
+
+    @Test
+    fun `setThemeMode and getThemeMode saves and retrieves mode correctly`() {
+        repository.setThemeMode(ThemeMode.DARK)
+        verify { editor.putString(AppPreferencesRepository.KEY_THEME_MODE, ThemeMode.DARK.name) }
+        assertEquals(ThemeMode.DARK, repository.getThemeMode())
+
+        repository.setThemeMode(ThemeMode.LIGHT)
+        verify { editor.putString(AppPreferencesRepository.KEY_THEME_MODE, ThemeMode.LIGHT.name) }
+        assertEquals(ThemeMode.LIGHT, repository.getThemeMode())
+
+        repository.setThemeMode(ThemeMode.SYSTEM)
+        verify { editor.putString(AppPreferencesRepository.KEY_THEME_MODE, ThemeMode.SYSTEM.name) }
+        assertEquals(ThemeMode.SYSTEM, repository.getThemeMode())
+    }
+
+    @Test
+    fun `getThemeMode falls back to legacy KEY_DARK_MODE if theme mode not explicitly set`() {
+        mockPrefsMap[AppPreferencesRepository.KEY_DARK_MODE] = true
+        assertEquals(ThemeMode.DARK, repository.getThemeMode())
+
+        mockPrefsMap[AppPreferencesRepository.KEY_DARK_MODE] = false
+        assertEquals(ThemeMode.LIGHT, repository.getThemeMode())
     }
 }

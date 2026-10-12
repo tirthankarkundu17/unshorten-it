@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
+import `in`.bitmaskers.unshortenit.data.model.ThemeMode
 import `in`.bitmaskers.unshortenit.utils.SharedPrefsKeys.APP_PREFS_NAME
 
 class AppPreferencesRepository(
@@ -18,6 +19,30 @@ class AppPreferencesRepository(
         const val MIN_DAYS_BETWEEN_PROMPTS = 7L
         const val MIN_TIME_BETWEEN_PROMPTS_MS = MIN_DAYS_BETWEEN_PROMPTS * 24 * 60 * 60 * 1000
         const val KEY_DARK_MODE = "KEY_DARK_MODE_ENABLED"
+        const val KEY_THEME_MODE = "KEY_THEME_MODE"
+    }
+
+    fun getThemeMode(): ThemeMode {
+        val saved = prefs.getString(KEY_THEME_MODE, null)
+        if (saved != null) {
+            return try {
+                ThemeMode.valueOf(saved)
+            } catch (e: IllegalArgumentException) {
+                ThemeMode.SYSTEM
+            }
+        }
+        if (prefs.contains(KEY_DARK_MODE)) {
+            val wasDark = prefs.getBoolean(KEY_DARK_MODE, false)
+            return if (wasDark) ThemeMode.DARK else ThemeMode.LIGHT
+        }
+        return ThemeMode.SYSTEM
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        prefs.edit {
+            putString(KEY_THEME_MODE, mode.name)
+            putBoolean(KEY_DARK_MODE, mode == ThemeMode.DARK)
+        }
     }
 
     fun isDarkMode(default: Boolean): Boolean {

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+import `in`.bitmaskers.unshortenit.data.model.ThemeMode
 import `in`.bitmaskers.unshortenit.data.repository.AppPreferencesRepository
 import `in`.bitmaskers.unshortenit.data.repository.UnshortenRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -31,6 +32,9 @@ class DashboardViewModel(
     private val _uiState = MutableStateFlow<UiState<List<HistoryItem>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<HistoryItem>>> = _uiState
 
+    private val _themeMode = MutableStateFlow(appPreferencesRepository.getThemeMode())
+    val themeMode: StateFlow<ThemeMode> = _themeMode
+
     private val _isDarkMode = MutableStateFlow(appPreferencesRepository.isDarkMode(default = false))
     val isDarkMode: StateFlow<Boolean> = _isDarkMode
 
@@ -38,10 +42,25 @@ class DashboardViewModel(
         _isDarkMode.value = appPreferencesRepository.isDarkMode(default = systemDark)
     }
 
+    fun cycleThemeMode() {
+        val next = when (_themeMode.value) {
+            ThemeMode.SYSTEM -> ThemeMode.DARK
+            ThemeMode.DARK -> ThemeMode.LIGHT
+            ThemeMode.LIGHT -> ThemeMode.SYSTEM
+        }
+        _themeMode.value = next
+        appPreferencesRepository.setThemeMode(next)
+        _isDarkMode.value = (next == ThemeMode.DARK)
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        _themeMode.value = mode
+        appPreferencesRepository.setThemeMode(mode)
+        _isDarkMode.value = (mode == ThemeMode.DARK)
+    }
+
     fun toggleDarkMode() {
-        val next = !_isDarkMode.value
-        _isDarkMode.value = next
-        appPreferencesRepository.setDarkMode(next)
+        cycleThemeMode()
     }
 
     init {

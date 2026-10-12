@@ -12,7 +12,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+import `in`.bitmaskers.unshortenit.data.model.ThemeMode
 import `in`.bitmaskers.unshortenit.data.repository.AppPreferencesRepository
+import io.mockk.every
+import io.mockk.verify
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModelTest {
@@ -75,5 +78,26 @@ class DashboardViewModelTest {
         val state = viewModel.uiState.value
         assertTrue(state is UiState.Success)
         assertEquals(emptyList<HistoryItem>(), (state as UiState.Success).data)
+    }
+
+    @Test
+    fun `cycleThemeMode cycles correctly from SYSTEM to DARK to LIGHT to SYSTEM`() = runTest {
+        coEvery { historyRepository.getAllHistory() } returns emptyList()
+        every { appPreferencesRepository.getThemeMode() } returns ThemeMode.SYSTEM
+
+        val viewModel = DashboardViewModel(appPreferencesRepository, historyRepository, unshortenRepository)
+        assertEquals(ThemeMode.SYSTEM, viewModel.themeMode.value)
+
+        viewModel.cycleThemeMode()
+        assertEquals(ThemeMode.DARK, viewModel.themeMode.value)
+        verify { appPreferencesRepository.setThemeMode(ThemeMode.DARK) }
+
+        viewModel.cycleThemeMode()
+        assertEquals(ThemeMode.LIGHT, viewModel.themeMode.value)
+        verify { appPreferencesRepository.setThemeMode(ThemeMode.LIGHT) }
+
+        viewModel.cycleThemeMode()
+        assertEquals(ThemeMode.SYSTEM, viewModel.themeMode.value)
+        verify { appPreferencesRepository.setThemeMode(ThemeMode.SYSTEM) }
     }
 }

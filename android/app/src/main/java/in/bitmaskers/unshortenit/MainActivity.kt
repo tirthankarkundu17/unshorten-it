@@ -14,8 +14,10 @@ import `in`.bitmaskers.unshortenit.ui.theme.MyApplicationTheme
 import `in`.bitmaskers.unshortenit.ui.viewmodel.AppViewModelFactory
 import com.google.android.gms.ads.MobileAds
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import `in`.bitmaskers.unshortenit.data.model.ThemeMode
 import `in`.bitmaskers.unshortenit.ui.viewmodel.DashboardViewModel
 
 class MainActivity : ComponentActivity() {
@@ -40,9 +42,15 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val dashboardViewModel: DashboardViewModel = viewModel(factory = viewModelFactory)
-            val isDarkMode by dashboardViewModel.isDarkMode.collectAsState()
+            val themeMode by dashboardViewModel.themeMode.collectAsState()
+            val systemDark = isSystemInDarkTheme()
+            val isDark = when (themeMode) {
+                ThemeMode.SYSTEM -> systemDark
+                ThemeMode.DARK -> true
+                ThemeMode.LIGHT -> false
+            }
 
-            MyApplicationTheme(darkTheme = isDarkMode) {
+            MyApplicationTheme(darkTheme = isDark) {
                 if (extractedUrls.isEmpty()) {
                     MainScreen(
                         viewModel = dashboardViewModel,
