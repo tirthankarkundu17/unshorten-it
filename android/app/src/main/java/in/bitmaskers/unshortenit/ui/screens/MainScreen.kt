@@ -179,7 +179,7 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
-                            .size(36.dp)
+                            .size(38.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                             .clickable(
@@ -193,7 +193,7 @@ fun MainScreen(viewModel: DashboardViewModel, onFinish: () -> Unit) {
                             imageVector = icon,
                             contentDescription = description,
                             tint = tint,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
